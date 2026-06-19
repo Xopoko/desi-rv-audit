@@ -1,0 +1,57 @@
+{
+  "command": "desi-rv-audit analyze data/desi_main/rvpix_exp-main-backup.fits data/desi_main/rvpix_exp-main-bright.fits data/desi_main/rvpix_exp-main-dark.fits --output-dir outputs/desi_main_audit --max-pairs-per-source 20 --lite-output --backup-correction data/desi_corrections/backup_correction.fits --strict-desi-main --report-output reports/desi_main_audit_report.md --plots --program-night-audit --program-night-permutations 20",
+  "correction": {
+    "CORRECTION_MD5": "f48a4b21b541e94d61f4372f4c555f12",
+    "CORRECTION_MD5_EXPECTED": "f48a4b21b541e94d61f4372f4c555f12",
+    "CORRECTION_MD5_OK": true,
+    "CORRECTION_PATH": "data/desi_corrections/backup_correction.fits",
+    "CORRECTION_SHA256": "eb4da91267db39f285a277989489f991ea48371336efedd28bd07d2b58e4a400",
+    "N_BACKUP_EPOCHS": 2152133,
+    "N_BACKUP_EPOCHS_MATCHED": 2152126,
+    "N_BACKUP_EPOCHS_UNMATCHED": 7,
+    "N_CORRECTION_ROWS": 1218152,
+    "N_CORRECTION_UNIQUE_TARGETIDS": 1218152,
+    "N_NON_BACKUP_TARGETID_MATCHES": 27,
+    "doi": "10.5281/zenodo.15469272"
+  },
+  "git_commit": "v0.2.0",
+  "input_files": [
+    {
+      "name": "data/desi_main/rvpix_exp-main-backup.fits",
+      "sha256": "8124fdf11983676eb8ed9e8a298dd9b12e74e066a1e77e9170360c0e58be8669",
+      "size": 3400439040
+    },
+    {
+      "name": "data/desi_main/rvpix_exp-main-bright.fits",
+      "sha256": "59f709a4695ff2e63ac6ce9cbf7fe3c1c1c63ab8269907d4963d22f27b4e6b18",
+      "size": 5645370240
+    },
+    {
+      "name": "data/desi_main/rvpix_exp-main-dark.fits",
+      "sha256": "5b6eeaed1f6bffb287f533cc6b171c7843d3df9cca6ab53b8415b6b43108943b",
+      "size": 2873151360
+    }
+  ],
+  "packages": {
+    "astropy": "6.1.7",
+    "matplotlib": "3.10.9",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.15.3"
+  },
+  "parameters": {
+    "backup_correction_md5": "f48a4b21b541e94d61f4372f4c555f12",
+    "max_pairs_per_source": 20,
+    "max_rows_per_file": null,
+    "min_sn_r": 5.0,
+    "program_night_folds": 5,
+    "program_night_min_pairs_per_label": 200,
+    "program_night_permutations": 20,
+    "program_night_run_permutation": true,
+    "run_program_night": true,
+    "strict_desi_main": true,
+    "write_heavy_outputs": false
+  },
+  "platform": "macOS-26.5.1-arm64-arm-64bit",
+  "python": "3.10.0"
+}
