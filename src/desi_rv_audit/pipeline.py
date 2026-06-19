@@ -10,7 +10,14 @@ from .corrections import apply_velocity_calibration
 from .io import load_many
 from .manifest import build_manifest, write_manifest
 from .pairs import build_pair_table
-from .program_night import run_program_night_experiment
+from .program_night import (
+    DEFAULT_CLIP_ITERATIONS,
+    DEFAULT_CLIP_SIGMA,
+    DEFAULT_DAMP,
+    DEFAULT_MAX_ABS_Z,
+    DEFAULT_MIN_DELTA_DAYS,
+    run_program_night_experiment,
+)
 from .quality import QualityRules, quality_mask, rejection_reasons
 from .stats import summarize_sources
 
@@ -102,6 +109,11 @@ def run_audit(
     run_program_night: bool = False,
     program_night_folds: int = 5,
     program_night_min_pairs_per_label: int = 200,
+    program_night_max_abs_z: float = DEFAULT_MAX_ABS_Z,
+    program_night_clip_sigma: float = DEFAULT_CLIP_SIGMA,
+    program_night_clip_iterations: int = DEFAULT_CLIP_ITERATIONS,
+    program_night_damp: float = DEFAULT_DAMP,
+    program_night_min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
     program_night_run_permutation: bool = True,
     program_night_permutations: int = 20,
     correction_summary: dict[str, object] | None = None,
@@ -163,6 +175,11 @@ def run_audit(
             pairs,
             n_folds=program_night_folds,
             min_pairs_per_label=program_night_min_pairs_per_label,
+            max_abs_z=program_night_max_abs_z,
+            clip_sigma=program_night_clip_sigma,
+            n_clip_iterations=program_night_clip_iterations,
+            damp=program_night_damp,
+            min_delta_days=program_night_min_delta_days,
             run_permutation=program_night_run_permutation,
             n_permutations=program_night_permutations,
         )
@@ -254,7 +271,7 @@ def save_outputs(
         index=False,
     )
     outputs.program_night_offsets.to_csv(
-        output_dir / "program_night_offsets.csv",
+        output_dir / "diagnostic_offsets_program_night.csv",
         index=False,
     )
     outputs.program_night_reproducibility.to_csv(
@@ -281,6 +298,11 @@ def load_and_run(
     run_program_night: bool = False,
     program_night_folds: int = 5,
     program_night_min_pairs_per_label: int = 200,
+    program_night_max_abs_z: float = DEFAULT_MAX_ABS_Z,
+    program_night_clip_sigma: float = DEFAULT_CLIP_SIGMA,
+    program_night_clip_iterations: int = DEFAULT_CLIP_ITERATIONS,
+    program_night_damp: float = DEFAULT_DAMP,
+    program_night_min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
     program_night_run_permutation: bool = True,
     program_night_permutations: int = 20,
 ) -> AuditOutputs:
@@ -301,6 +323,11 @@ def load_and_run(
         "run_program_night": run_program_night,
         "program_night_folds": program_night_folds,
         "program_night_min_pairs_per_label": program_night_min_pairs_per_label,
+        "program_night_max_abs_z": program_night_max_abs_z,
+        "program_night_clip_sigma": program_night_clip_sigma,
+        "program_night_clip_iterations": program_night_clip_iterations,
+        "program_night_damp": program_night_damp,
+        "program_night_min_delta_days": program_night_min_delta_days,
         "program_night_run_permutation": program_night_run_permutation,
         "program_night_permutations": program_night_permutations,
     }
@@ -312,6 +339,11 @@ def load_and_run(
         run_program_night=run_program_night,
         program_night_folds=program_night_folds,
         program_night_min_pairs_per_label=program_night_min_pairs_per_label,
+        program_night_max_abs_z=program_night_max_abs_z,
+        program_night_clip_sigma=program_night_clip_sigma,
+        program_night_clip_iterations=program_night_clip_iterations,
+        program_night_damp=program_night_damp,
+        program_night_min_delta_days=program_night_min_delta_days,
         program_night_run_permutation=program_night_run_permutation,
         program_night_permutations=program_night_permutations,
         correction_summary=correction_summary,

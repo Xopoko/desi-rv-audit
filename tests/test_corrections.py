@@ -36,3 +36,24 @@ def test_backup_correction_rejects_conflicting_targetids(tmp_path):
 
     with pytest.raises(ValueError, match="conflicting offsets"):
         load_backup_correction(correction_path)
+
+
+def test_backup_correction_md5_mismatch_fails(tmp_path):
+    correction_path = tmp_path / "correction.csv"
+    pd.DataFrame({"TARGETID": [1], "VRAD_OFFSET": [5.0]}).to_csv(correction_path, index=False)
+    frame = pd.DataFrame(
+        {
+            "TARGETID": [1],
+            "SURVEY": ["MAIN"],
+            "PROGRAM": ["BACKUP"],
+            "VRAD": [100.0],
+            "VRAD_ERR": [1.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="MD5 mismatch"):
+        apply_velocity_calibration(
+            frame,
+            correction_path,
+            expected_backup_correction_md5="00000000000000000000000000000000",
+        )

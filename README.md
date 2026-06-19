@@ -46,9 +46,20 @@ The pipeline:
    - graph connectedness diagnostics;
    - same-component-only holdout scoring;
    - independent source-half offset reproducibility;
-   - exposure-level shuffled-night-within-program controls.
+   - coarse exposure-level shuffled-night-within-program controls.
 
 The resulting offsets are diagnostics, not official catalogue corrections.
+
+The split is source-disjoint, not night-disjoint. The model estimates offsets
+for nights represented by the training stars and evaluates those offsets on
+different stars observed on the same nights. It therefore tests transfer across
+sources for known nights, not extrapolation to unseen nights.
+
+This is an exploratory analysis developed iteratively on the public MAIN DR1
+sample. Source-grouped folds prevent source reuse within each evaluation, but
+the overall workflow was not pre-registered and has not yet been confirmed on a
+fully untouched data set. Confirmation would require a pre-specified analysis
+on an independent survey, data slice, or future release.
 
 ## Quick Start
 
@@ -102,6 +113,11 @@ The local run used for the reproducibility bundle processed:
 - 12,141 stricter constant-RV screening outliers with at least three good epochs
   and baseline greater than one day.
 
+These outlier counts come from the baseline constant-RV screening layer before
+applying the diagnostic `PROGRAM:NIGHT` model. They are not interpreted as
+confirmed variable stars and are not used as evidence for the main program-night
+result.
+
 Runtime on the local machine was 1,831.86 seconds with 11.66 GiB maximum
 resident set size for the full 20-permutation audit.
 
@@ -123,21 +139,23 @@ shuffled baselines.
 | `|z| > 5` | 0.022 | 0.020 | 0.018 | 0.017 |
 | Mean Gaussian pair loss | 4.358 | 4.160 | 4.052 | 3.981 |
 
-The real model reduces raw robust scatter by 0.495 km/s, or 13.5%. The
+The real model reduces raw robust scatter by 0.495 km/s, or 13.5%. The coarse
 exposure-level shuffled-night controls reduce raw scatter by 0.158 km/s on
 average, or 4.3%; across 20 permutations the shuffled improvement ranges from
 0.096 to 0.234 km/s, and no shuffled permutation reaches the real improvement.
+With only 20 permutations, this is a coarse negative control rather than a
+strong formal significance claim.
 
 The strongest program-pair improvement is `BACKUP / BACKUP`: raw robust scatter
-changes from 3.663 to 2.944 km/s and normalized central width from 1.081 to
+changes from 3.663 to 2.943 km/s and normalized central width from 1.081 to
 0.871.
 
-Independent source halves recover 486 common `PROGRAM:NIGHT` offsets with:
+Independent source halves recover 484 common `PROGRAM:NIGHT` offsets with:
 
 - offset correlation: 0.980;
-- slope B on A: 0.993;
-- median absolute difference: 0.095 km/s;
-- robust width of offset differences: 0.173 km/s.
+- slope B on A: 0.994;
+- median absolute difference: 0.096 km/s;
+- robust width of offset differences: 0.174 km/s.
 
 Pair-cap sensitivity is stable:
 
@@ -160,7 +178,7 @@ screening-outlier tables. The included reproducibility bundle is compact:
 - `reports/program_night_artifacts/permutation_summary.csv`
 - `reports/program_night_artifacts/pair_cap_sensitivity.csv`
 - `reports/program_night_artifacts/correction_summary.csv`
-- `reports/program_night_artifacts/offsets_program_night.csv`
+- `reports/program_night_artifacts/diagnostic_offsets_program_night.csv`
 - `reports/program_night_artifacts/source_fold_widths.png`
 - `reports/program_night_artifacts/run_manifest.json`
 

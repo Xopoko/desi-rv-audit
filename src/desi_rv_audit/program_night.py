@@ -17,6 +17,13 @@ class ProgramNightResult:
     permutation_summary: pd.DataFrame
 
 
+DEFAULT_MAX_ABS_Z = 5.0
+DEFAULT_CLIP_SIGMA = 3.5
+DEFAULT_CLIP_ITERATIONS = 3
+DEFAULT_DAMP = 0.2
+DEFAULT_MIN_DELTA_DAYS = 1.0
+
+
 class _DisjointSet:
     def __init__(self, n: int) -> None:
         self.parent = np.arange(n, dtype=np.int64)
@@ -167,6 +174,7 @@ def _prepare_pairs(
     pairs: pd.DataFrame,
     shuffled: bool = False,
     permutation_index: int = 0,
+    min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
 ) -> pd.DataFrame:
     required = [
         "GROUP_ID",
@@ -207,7 +215,7 @@ def _prepare_pairs(
         & np.isfinite(data["PAIR_ERROR_FORMAL"])
         & (data["PAIR_ERROR"] > 0)
         & (data["PAIR_ERROR_FORMAL"] > 0)
-        & (data["DELTA_DAYS"] > 1.0)
+        & (data["DELTA_DAYS"] > min_delta_days)
         & data["LABEL_1"].ne(data["LABEL_2"])
     )
     return data.loc[mask].copy()
@@ -556,14 +564,15 @@ def run_program_night_experiment(
     pairs: pd.DataFrame,
     n_folds: int = 5,
     min_pairs_per_label: int = 200,
-    max_abs_z: float = 5.0,
-    clip_sigma: float = 3.5,
-    n_clip_iterations: int = 3,
-    damp: float = 0.2,
+    max_abs_z: float = DEFAULT_MAX_ABS_Z,
+    clip_sigma: float = DEFAULT_CLIP_SIGMA,
+    n_clip_iterations: int = DEFAULT_CLIP_ITERATIONS,
+    damp: float = DEFAULT_DAMP,
+    min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
     run_permutation: bool = True,
     n_permutations: int = 20,
 ) -> ProgramNightResult:
-    base = _prepare_pairs(pairs, shuffled=False)
+    base = _prepare_pairs(pairs, shuffled=False, min_delta_days=min_delta_days)
     if base.empty:
         return ProgramNightResult(
             pd.DataFrame(),
@@ -602,6 +611,7 @@ def run_program_night_experiment(
                 pairs,
                 shuffled=True,
                 permutation_index=permutation_index,
+                min_delta_days=min_delta_days,
             )
             if shuffled.empty:
                 continue

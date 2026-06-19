@@ -14,7 +14,7 @@
     "N_NON_BACKUP_TARGETID_MATCHES": 27,
     "doi": "10.5281/zenodo.15469272"
   },
-  "git_commit": "v0.2.0",
+  "git_commit": "d6712a8ca65ee1f448be886a48fcf69ecbe6ee79",
   "input_files": [
     {
       "name": "data/desi_main/rvpix_exp-main-backup.fits",
@@ -44,7 +44,12 @@
     "max_pairs_per_source": 20,
     "max_rows_per_file": null,
     "min_sn_r": 5.0,
+    "program_night_clip_iterations": 3,
+    "program_night_clip_sigma": 3.5,
+    "program_night_damp": 0.2,
     "program_night_folds": 5,
+    "program_night_max_abs_z": 5.0,
+    "program_night_min_delta_days": 1.0,
     "program_night_min_pairs_per_label": 200,
     "program_night_permutations": 20,
     "program_night_run_permutation": true,
@@ -53,5 +58,6 @@
     "write_heavy_outputs": false
   },
   "platform": "macOS-26.5.1-arm64-arm-64bit",
-  "python": "3.10.0"
+  "python": "3.10.0",
+  "release_tag": "v0.2.0"
 }

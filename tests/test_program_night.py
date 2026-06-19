@@ -1,6 +1,7 @@
+import numpy as np
 import pandas as pd
 
-from desi_rv_audit.program_night import _prepare_pairs, run_program_night_experiment
+from desi_rv_audit.program_night import _hash_mod, _prepare_pairs, run_program_night_experiment
 
 
 def test_program_night_reduces_source_grouped_holdout_scatter():
@@ -72,3 +73,12 @@ def test_exposure_shuffle_assigns_one_night_per_exposure():
     shuffled = _prepare_pairs(pairs, shuffled=True, permutation_index=1)
     assigned = shuffled.loc[shuffled["EXPOSURE_KEY_1"] == "MAIN|BACKUP|100", "LABEL_1"]
     assert assigned.nunique() == 1
+
+
+def test_source_group_fold_assignment_is_disjoint():
+    group_ids = pd.Series([101, 101, 101, 202, 202, 303, 303, 303, 303])
+    fold_ids = _hash_mod(group_ids, 5)
+
+    for group_id in group_ids.unique():
+        group_folds = np.unique(fold_ids[group_ids == group_id])
+        assert len(group_folds) == 1

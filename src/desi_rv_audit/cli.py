@@ -56,6 +56,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     analyze.add_argument("--program-night-folds", type=int, default=5)
     analyze.add_argument("--program-night-min-pairs-per-label", type=int, default=200)
+    analyze.add_argument("--program-night-max-abs-z", type=float, default=5.0)
+    analyze.add_argument("--program-night-clip-sigma", type=float, default=3.5)
+    analyze.add_argument("--program-night-clip-iterations", type=int, default=3)
+    analyze.add_argument("--program-night-damp", type=float, default=0.2)
+    analyze.add_argument("--program-night-min-delta-days", type=float, default=1.0)
     analyze.add_argument("--program-night-permutations", type=int, default=20)
     analyze.add_argument(
         "--no-program-night-permutation",
@@ -86,6 +91,11 @@ def main() -> None:
             run_program_night=args.program_night_audit,
             program_night_folds=args.program_night_folds,
             program_night_min_pairs_per_label=args.program_night_min_pairs_per_label,
+            program_night_max_abs_z=args.program_night_max_abs_z,
+            program_night_clip_sigma=args.program_night_clip_sigma,
+            program_night_clip_iterations=args.program_night_clip_iterations,
+            program_night_damp=args.program_night_damp,
+            program_night_min_delta_days=args.program_night_min_delta_days,
             program_night_run_permutation=not args.no_program_night_permutation,
             program_night_permutations=args.program_night_permutations,
         )

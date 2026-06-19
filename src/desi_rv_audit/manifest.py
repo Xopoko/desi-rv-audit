@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import platform
 import shlex
 import subprocess
@@ -20,6 +21,9 @@ def _sha256(path: Path) -> str:
 
 
 def _git_commit() -> str:
+    override = os.environ.get("DESI_RV_AUDIT_ANALYSIS_SHA", "").strip()
+    if override:
+        return override
     try:
         return subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
@@ -28,6 +32,10 @@ def _git_commit() -> str:
         ).strip()
     except Exception:
         return ""
+
+
+def _release_tag() -> str:
+    return os.environ.get("DESI_RV_AUDIT_RELEASE_TAG", "").strip()
 
 
 def _package_versions() -> dict[str, str]:
@@ -66,6 +74,7 @@ def build_manifest(
         )
     return {
         "git_commit": _git_commit(),
+        "release_tag": _release_tag(),
         "command": _command_line(),
         "python": platform.python_version(),
         "platform": platform.platform(),

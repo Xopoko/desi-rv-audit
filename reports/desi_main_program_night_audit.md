@@ -47,6 +47,11 @@ Local run:
 - Runtime: 1,831.86 s
 - Maximum resident set size: 11.66 GiB
 
+The 25,953 outliers and 12,141 strict outliers come from the baseline
+constant-RV screening layer before applying the diagnostic `PROGRAM:NIGHT`
+model. They are not interpreted as confirmed variable stars and are not used as
+evidence for the main program-night result.
+
 ## Published Backup Correction
 
 The correction table is applied only when `SURVEY == MAIN` and
@@ -78,10 +83,11 @@ Mean over five source-grouped folds:
 | Mean Gaussian pair loss | 4.358 | 4.160 | 4.052 | 3.981 |
 
 The real `PROGRAM:NIGHT` model reduces holdout raw robust scatter by
-0.495 km/s, or 13.5%. Exposure-level shuffled-night controls reduce raw scatter
-by 0.158 km/s on average, or 4.3%. Across 20 permutations, shuffled improvement
-ranges from 0.096 to 0.234 km/s; no shuffled permutation reaches the real
-improvement.
+0.495 km/s, or 13.5%. Coarse exposure-level shuffled-night controls reduce raw
+scatter by 0.158 km/s on average, or 4.3%. Across 20 permutations, shuffled
+improvement ranges from 0.096 to 0.234 km/s; no shuffled permutation reaches
+the real improvement. With only 20 permutations, this is a coarse negative
+control rather than a strong formal significance claim.
 
 ![Source-grouped fold widths](program_night_artifacts/source_fold_widths.png)
 
@@ -116,6 +122,11 @@ Mean over folds:
 Offsets are centered within connected components and are interpreted only as
 diagnostic zero-point terms.
 
+The split is source-disjoint, not night-disjoint. The model estimates offsets
+for nights represented by the training stars and evaluates those offsets on
+different stars observed on the same nights. It therefore tests transfer across
+sources for known nights, not extrapolation to unseen nights.
+
 ## Independent-Half Reproducibility
 
 Independent source halves recover 484 common `PROGRAM:NIGHT` labels after
@@ -127,6 +138,12 @@ component and gauge alignment:
 - Robust width of offset differences: 0.174 km/s
 
 This is the main check against shared-source leakage or pair-row noise reuse.
+
+This is an exploratory analysis developed iteratively on the public MAIN DR1
+sample. Source-grouped folds prevent source reuse within each evaluation, but
+the overall workflow was not pre-registered and has not yet been confirmed on a
+fully untouched data set. Confirmation would require a pre-specified analysis on
+an independent survey, data slice, or future release.
 
 ## Pair-Cap Sensitivity
 
@@ -158,7 +175,7 @@ This audit does not prove:
 - `reports/desi_main_audit_report.md`
 - `reports/program_night_artifacts/summary.csv`
 - `reports/program_night_artifacts/by_program.csv`
-- `reports/program_night_artifacts/offsets_program_night.csv`
+- `reports/program_night_artifacts/diagnostic_offsets_program_night.csv`
 - `reports/program_night_artifacts/reproducibility.csv`
 - `reports/program_night_artifacts/permutation_summary.csv`
 - `reports/program_night_artifacts/pair_cap_sensitivity.csv`

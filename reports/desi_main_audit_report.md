@@ -196,7 +196,17 @@ Independent source-half reproducibility for nightly offsets:
 |------------------:|:------------------------|----------------------------:|---------------------:|----------------------:|----------------------:|------------------------:|
 |               484 | 1/1                     |                      -0.002 |                 0.98 |                 0.994 |                 0.096 |                   0.174 |
 
-Deterministic shuffled-exposure-night-within-program control:
+The split is source-disjoint, not night-disjoint. The model estimates offsets
+for nights represented by the training stars and evaluates those offsets on
+different stars observed on the same nights. It therefore tests transfer across
+sources for known nights, not extrapolation to unseen nights.
+
+This is an exploratory analysis developed iteratively on the public MAIN DR1
+sample. Source-grouped folds prevent source reuse within each evaluation, but
+the overall workflow was not pre-registered and has not yet been confirmed on a
+fully untouched data set.
+
+Coarse deterministic shuffled-exposure-night-within-program control:
 
 |   FOLD |   N_LABELS |   N_TRAIN_PAIRS |   N_CONNECTED_COMPONENTS |   LARGEST_COMPONENT_LABEL_FRACTION |   LARGEST_COMPONENT_PAIR_FRACTION |   LSQR_ISTOP |   LSQR_ITERS |   LSQR_ACOND |   LSQR_R1NORM |   LSQR_ARNORM |   N_HOLDOUT_PAIRS |   N_HOLDOUT_SAME_COMPONENT |   N_HOLDOUT_CROSS_COMPONENT |   BEFORE_RAW_WIDTH_KMS |   AFTER_RAW_WIDTH_KMS |   BEFORE_WIDTH_Z |   AFTER_WIDTH_Z |   BEFORE_TAIL_GT_3 |   AFTER_TAIL_GT_3 |   BEFORE_TAIL_GT_5 |   AFTER_TAIL_GT_5 |   BEFORE_MEAN_GAUSSIAN_PAIR_LOSS |   AFTER_MEAN_GAUSSIAN_PAIR_LOSS |   MACRO_WIDTH_BEFORE_Z |   MACRO_WIDTH_AFTER_Z |   MACRO_GAUSSIAN_PAIR_LOSS_BEFORE |   MACRO_GAUSSIAN_PAIR_LOSS_AFTER |   PERMUTATION | CONTROL                                |
 |-------:|-----------:|----------------:|-------------------------:|-----------------------------------:|----------------------------------:|-------------:|-------------:|-------------:|--------------:|--------------:|------------------:|---------------------------:|----------------------------:|-----------------------:|----------------------:|-----------------:|----------------:|-------------------:|------------------:|-------------------:|------------------:|---------------------------------:|--------------------------------:|-----------------------:|----------------------:|----------------------------------:|---------------------------------:|--------------:|:---------------------------------------|
