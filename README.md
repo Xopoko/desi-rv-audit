@@ -63,6 +63,8 @@ on an independent survey, data slice, or future release.
 
 ## Quick Start
 
+macOS/Linux:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -71,14 +73,20 @@ pip install -e ".[fits,dev]"
 pytest
 ```
 
-Synthetic smoke run:
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[fits,dev]"
+
+python -m pytest
+```
+
+Synthetic smoke run on any platform after activation:
 
 ```bash
-desi-rv-audit analyze \
-  data/synthetic_epochs.csv \
-  --output-dir outputs/demo \
-  --report-output reports/demo_report.md \
-  --plots
+desi-rv-audit analyze data/synthetic_epochs.csv --output-dir outputs/demo --report-output reports/demo_report.md --plots
 ```
 
 ## Reproduce the MAIN Audit
@@ -86,14 +94,23 @@ desi-rv-audit analyze \
 Download the public DESI MAIN files and the Zenodo backup correction:
 
 ```bash
-./scripts/download_main_bundle.sh
+desi-rv-audit download-main
 ```
 
-Run the audit:
+The downloader is implemented in Python and works on macOS, Windows, and Linux.
+It resumes partial downloads by default and validates the expected file sizes and
+backup-correction MD5. The legacy Unix shell wrapper
+`./scripts/download_main_bundle.sh` and the Windows PowerShell wrapper
+`.\scripts\download_main_bundle.ps1` are also available after installing the
+package.
+
+Run the audit on macOS/Linux:
 
 ```bash
 desi-rv-audit analyze \
-  data/desi_main/*.fits \
+  data/desi_main/rvpix_exp-main-backup.fits \
+  data/desi_main/rvpix_exp-main-bright.fits \
+  data/desi_main/rvpix_exp-main-dark.fits \
   --output-dir outputs/desi_main_audit \
   --max-pairs-per-source 20 \
   --lite-output \
@@ -102,8 +119,34 @@ desi-rv-audit analyze \
   --strict-desi-main \
   --plots \
   --program-night-audit \
-  --program-night-permutations 20
+  --program-night-permutations 20 \
+  --program-night-workers 4 \
+  --timings-output outputs/desi_main_audit/stage_timings.csv
 ```
+
+Run the audit on Windows PowerShell:
+
+```powershell
+desi-rv-audit analyze `
+  data/desi_main/rvpix_exp-main-backup.fits `
+  data/desi_main/rvpix_exp-main-bright.fits `
+  data/desi_main/rvpix_exp-main-dark.fits `
+  --output-dir outputs/desi_main_audit `
+  --max-pairs-per-source 20 `
+  --lite-output `
+  --backup-correction data/desi_corrections/backup_correction.fits `
+  --report-output reports/desi_main_audit_report.md `
+  --strict-desi-main `
+  --plots `
+  --program-night-audit `
+  --program-night-permutations 20 `
+  --program-night-workers 4 `
+  --timings-output outputs/desi_main_audit/stage_timings.csv
+```
+
+Set `--program-night-workers 1` for the most conservative single-threaded
+execution, or raise it on high-memory workstations. The timings CSV records
+where wall time is spent in each run.
 
 The local run used for the reproducibility bundle processed:
 

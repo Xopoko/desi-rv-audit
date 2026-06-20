@@ -67,7 +67,7 @@ def build_manifest(
         path = Path(path_like)
         files.append(
             {
-                "name": str(path),
+                "name": path.as_posix(),
                 "size": path.stat().st_size,
                 "sha256": _sha256(path),
             }

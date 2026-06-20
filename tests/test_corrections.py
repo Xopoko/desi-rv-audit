@@ -1,7 +1,11 @@
 import pandas as pd
 import pytest
 
-from desi_rv_audit.corrections import apply_velocity_calibration, load_backup_correction
+from desi_rv_audit.corrections import (
+    apply_velocity_calibration,
+    backup_correction_file_summary,
+    load_backup_correction,
+)
 
 
 def test_backup_correction_only_applies_to_main_backup(tmp_path):
@@ -57,3 +61,16 @@ def test_backup_correction_md5_mismatch_fails(tmp_path):
             correction_path,
             expected_backup_correction_md5="00000000000000000000000000000000",
         )
+
+
+def test_backup_correction_summary_uses_posix_path(tmp_path):
+    correction_path = tmp_path / "nested" / "correction.csv"
+    correction_path.parent.mkdir()
+    pd.DataFrame({"TARGETID": [1], "VRAD_OFFSET": [5.0]}).to_csv(
+        correction_path,
+        index=False,
+    )
+
+    summary = backup_correction_file_summary(correction_path)
+
+    assert summary["CORRECTION_PATH"] == correction_path.as_posix()

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .downloads import download_main_bundle
 from .pipeline import load_and_run
 from .plots import write_plots
 from .report import build_report, write_report
@@ -14,6 +15,20 @@ def _parser() -> argparse.ArgumentParser:
         description="Audit multi-epoch radial-velocity measurements.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    download = subparsers.add_parser(
+        "download-main",
+        help="Download the public DESI MAIN files and backup correction",
+    )
+    download.add_argument("--main-output", default="data/desi_main")
+    download.add_argument("--correction-output", default="data/desi_corrections")
+    download.add_argument(
+        "--no-resume",
+        dest="resume",
+        action="store_false",
+        help="Restart downloads from the beginning instead of resuming partial files.",
+    )
+    download.set_defaults(resume=True)
 
     analyze = subparsers.add_parser("analyze", help="Analyze CSV, Parquet, or FITS epoch tables")
     analyze.add_argument("inputs", nargs="+", help="One or more input files")
@@ -63,6 +78,16 @@ def _parser() -> argparse.ArgumentParser:
     analyze.add_argument("--program-night-min-delta-days", type=float, default=1.0)
     analyze.add_argument("--program-night-permutations", type=int, default=20)
     analyze.add_argument(
+        "--program-night-workers",
+        type=int,
+        default=1,
+        help="Number of threads used for shuffled PROGRAM:NIGHT permutations.",
+    )
+    analyze.add_argument(
+        "--timings-output",
+        help="Write per-stage runtime timings to this CSV path.",
+    )
+    analyze.add_argument(
         "--no-program-night-permutation",
         action="store_true",
         help="Skip deterministic shuffled-night control for PROGRAM:NIGHT diagnostics.",
@@ -77,7 +102,14 @@ def _parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = _parser().parse_args()
-    if args.command == "analyze":
+    if args.command == "download-main":
+        files = download_main_bundle(
+            main_output=args.main_output,
+            correction_output=args.correction_output,
+            resume=args.resume,
+        )
+        print(f"Downloaded MAIN bundle: {len(files)} files")
+    elif args.command == "analyze":
         outputs = load_and_run(
             args.inputs,
             args.output_dir,
@@ -98,6 +130,8 @@ def main() -> None:
             program_night_min_delta_days=args.program_night_min_delta_days,
             program_night_run_permutation=not args.no_program_night_permutation,
             program_night_permutations=args.program_night_permutations,
+            program_night_workers=args.program_night_workers,
+            timings_output_path=args.timings_output,
         )
         if args.report_output:
             report_text = build_report(

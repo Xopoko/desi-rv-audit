@@ -94,7 +94,7 @@ def backup_correction_file_summary(path: str | Path) -> dict[str, object]:
     path = Path(path)
     correction = load_backup_correction(path)
     return {
-        "CORRECTION_PATH": str(path),
+        "CORRECTION_PATH": path.as_posix(),
         "CORRECTION_MD5": _file_digest(path, "md5"),
         "CORRECTION_SHA256": _file_digest(path, "sha256"),
         "N_CORRECTION_ROWS": int(len(correction)),

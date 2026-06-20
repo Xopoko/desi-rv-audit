@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import lsqr
 
 
@@ -22,32 +24,6 @@ DEFAULT_CLIP_SIGMA = 3.5
 DEFAULT_CLIP_ITERATIONS = 3
 DEFAULT_DAMP = 0.2
 DEFAULT_MIN_DELTA_DAYS = 1.0
-
-
-class _DisjointSet:
-    def __init__(self, n: int) -> None:
-        self.parent = np.arange(n, dtype=np.int64)
-        self.size = np.ones(n, dtype=np.int64)
-
-    def find(self, value: int) -> int:
-        root = value
-        while self.parent[root] != root:
-            root = int(self.parent[root])
-        while self.parent[value] != value:
-            parent = int(self.parent[value])
-            self.parent[value] = root
-            value = parent
-        return root
-
-    def union(self, first: int, second: int) -> None:
-        root_first = self.find(first)
-        root_second = self.find(second)
-        if root_first == root_second:
-            return
-        if self.size[root_first] < self.size[root_second]:
-            root_first, root_second = root_second, root_first
-        self.parent[root_second] = root_first
-        self.size[root_first] += self.size[root_second]
 
 
 def _hash_mod(values: pd.Series, modulo: int) -> np.ndarray:
@@ -250,13 +226,23 @@ def _fit_offsets(
         }
 
     label_index = {label: idx for idx, label in enumerate(labels)}
-    dsu = _DisjointSet(len(labels))
     left_idx = work["LABEL_1"].map(label_index).to_numpy(dtype=np.int64)
     right_idx = work["LABEL_2"].map(label_index).to_numpy(dtype=np.int64)
-    for left, right in zip(left_idx, right_idx):
-        dsu.union(int(left), int(right))
-    component_roots = np.asarray([dsu.find(idx) for idx in range(len(labels))], dtype=np.int64)
-    roots, component_ids = np.unique(component_roots, return_inverse=True)
+    graph = coo_matrix(
+        (
+            np.ones(len(left_idx) * 2, dtype=np.int8),
+            (
+                np.r_[left_idx, right_idx],
+                np.r_[right_idx, left_idx],
+            ),
+        ),
+        shape=(len(labels), len(labels)),
+    ).tocsr()
+    n_components, component_ids = connected_components(
+        graph,
+        directed=False,
+        return_labels=True,
+    )
     label_components = pd.Series(component_ids, index=labels, dtype=int)
     component_pair_counts = pd.Series(component_ids[left_idx]).value_counts()
 
@@ -306,7 +292,7 @@ def _fit_offsets(
     stats = {
         "N_LABELS": int(len(labels)),
         "N_TRAIN_PAIRS": int(len(final_current)),
-        "N_CONNECTED_COMPONENTS": int(len(roots)),
+        "N_CONNECTED_COMPONENTS": int(n_components),
         "LARGEST_COMPONENT_LABEL_FRACTION": float(label_component_sizes.max() / len(labels)),
         "LARGEST_COMPONENT_PAIR_FRACTION": float(component_pair_counts.max() / max(len(work), 1)),
         "LSQR_ISTOP": int(solution[1]) if solution is not None else np.nan,
@@ -560,6 +546,39 @@ def _reproducibility(
     )
 
 
+def _run_permutation(
+    pairs: pd.DataFrame,
+    permutation_index: int,
+    n_folds: int,
+    min_pairs_per_label: int,
+    max_abs_z: float,
+    clip_sigma: float,
+    n_clip_iterations: int,
+    damp: float,
+    min_delta_days: float,
+) -> pd.DataFrame:
+    shuffled = _prepare_pairs(
+        pairs,
+        shuffled=True,
+        permutation_index=permutation_index,
+        min_delta_days=min_delta_days,
+    )
+    if shuffled.empty:
+        return pd.DataFrame()
+    permutation_frame, _, _ = _run_folds(
+        shuffled,
+        n_folds=n_folds,
+        min_pairs_per_label=min_pairs_per_label,
+        max_abs_z=max_abs_z,
+        clip_sigma=clip_sigma,
+        n_clip_iterations=n_clip_iterations,
+        damp=damp,
+    )
+    permutation_frame["PERMUTATION"] = permutation_index
+    permutation_frame["CONTROL"] = "SHUFFLED_EXPOSURE_NIGHT_WITHIN_PROGRAM"
+    return permutation_frame
+
+
 def run_program_night_experiment(
     pairs: pd.DataFrame,
     n_folds: int = 5,
@@ -571,6 +590,7 @@ def run_program_night_experiment(
     min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
     run_permutation: bool = True,
     n_permutations: int = 20,
+    permutation_workers: int = 1,
 ) -> ProgramNightResult:
     base = _prepare_pairs(pairs, shuffled=False, min_delta_days=min_delta_days)
     if base.empty:
@@ -605,28 +625,41 @@ def run_program_night_experiment(
     )
     permutation_summary = pd.DataFrame()
     if run_permutation:
-        permutation_frames = []
-        for permutation_index in range(n_permutations):
-            shuffled = _prepare_pairs(
-                pairs,
-                shuffled=True,
-                permutation_index=permutation_index,
-                min_delta_days=min_delta_days,
-            )
-            if shuffled.empty:
-                continue
-            permutation_frame, _, _ = _run_folds(
-                shuffled,
-                n_folds=n_folds,
-                min_pairs_per_label=min_pairs_per_label,
-                max_abs_z=max_abs_z,
-                clip_sigma=clip_sigma,
-                n_clip_iterations=n_clip_iterations,
-                damp=damp,
-            )
-            permutation_frame["PERMUTATION"] = permutation_index
-            permutation_frame["CONTROL"] = "SHUFFLED_EXPOSURE_NIGHT_WITHIN_PROGRAM"
-            permutation_frames.append(permutation_frame)
+        worker_count = max(1, int(permutation_workers))
+        if worker_count > 1 and n_permutations > 1:
+            with ThreadPoolExecutor(max_workers=min(worker_count, n_permutations)) as executor:
+                permutation_frames = list(
+                    executor.map(
+                        lambda permutation_index: _run_permutation(
+                            pairs,
+                            permutation_index,
+                            n_folds=n_folds,
+                            min_pairs_per_label=min_pairs_per_label,
+                            max_abs_z=max_abs_z,
+                            clip_sigma=clip_sigma,
+                            n_clip_iterations=n_clip_iterations,
+                            damp=damp,
+                            min_delta_days=min_delta_days,
+                        ),
+                        range(n_permutations),
+                    )
+                )
+        else:
+            permutation_frames = [
+                _run_permutation(
+                    pairs,
+                    permutation_index,
+                    n_folds=n_folds,
+                    min_pairs_per_label=min_pairs_per_label,
+                    max_abs_z=max_abs_z,
+                    clip_sigma=clip_sigma,
+                    n_clip_iterations=n_clip_iterations,
+                    damp=damp,
+                    min_delta_days=min_delta_days,
+                )
+                for permutation_index in range(n_permutations)
+            ]
+        permutation_frames = [frame for frame in permutation_frames if not frame.empty]
         if permutation_frames:
             permutation_summary = pd.concat(permutation_frames, ignore_index=True, sort=False)
     return ProgramNightResult(summary, by_program, offsets, reproducibility, permutation_summary)

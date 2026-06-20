@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pandas.testing as pdt
 
 from desi_rv_audit.program_night import _hash_mod, _prepare_pairs, run_program_night_experiment
 
@@ -82,3 +83,52 @@ def test_source_group_fold_assignment_is_disjoint():
     for group_id in group_ids.unique():
         group_folds = np.unique(fold_ids[group_ids == group_id])
         assert len(group_folds) == 1
+
+
+def test_parallel_permutation_workers_preserve_results():
+    rows = []
+    nights = ["20210101", "20210102", "20210103", "20210104"]
+    for idx in range(160):
+        first = nights[idx % len(nights)]
+        second = nights[(idx + 1) % len(nights)]
+        rows.append(
+            {
+                "GROUP_ID": idx,
+                "DELTA_VRAD": 0.1 * ((idx % 7) - 3),
+                "PAIR_ERROR": 1.0,
+                "PAIR_ERROR_FORMAL": 0.8,
+                "PROGRAM_1": "BACKUP",
+                "PROGRAM_2": "BACKUP",
+                "NIGHT_1": first,
+                "NIGHT_2": second,
+                "PROGRAM_PAIR": "BACKUP / BACKUP",
+                "DELTA_DAYS": 2.0,
+                "EXPOSURE_KEY_1": f"MAIN|BACKUP|{first}|{idx}",
+                "EXPOSURE_KEY_2": f"MAIN|BACKUP|{second}|{idx}",
+            }
+        )
+    pairs = pd.DataFrame(rows)
+
+    serial = run_program_night_experiment(
+        pairs,
+        n_folds=2,
+        min_pairs_per_label=10,
+        n_permutations=2,
+        permutation_workers=1,
+    )
+    parallel = run_program_night_experiment(
+        pairs,
+        n_folds=2,
+        min_pairs_per_label=10,
+        n_permutations=2,
+        permutation_workers=2,
+    )
+
+    pdt.assert_frame_equal(serial.summary, parallel.summary)
+    pdt.assert_frame_equal(serial.by_program, parallel.by_program)
+    pdt.assert_frame_equal(serial.offsets, parallel.offsets)
+    pdt.assert_frame_equal(serial.reproducibility, parallel.reproducibility)
+    pdt.assert_frame_equal(
+        serial.permutation_summary.sort_values(["PERMUTATION", "FOLD"]).reset_index(drop=True),
+        parallel.permutation_summary.sort_values(["PERMUTATION", "FOLD"]).reset_index(drop=True),
+    )

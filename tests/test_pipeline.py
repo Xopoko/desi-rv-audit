@@ -35,3 +35,22 @@ def test_lite_output_skips_heavy_pair_and_source_tables(tmp_path):
     assert (tmp_path / "candidate_sources.csv").exists()
     assert (tmp_path / "source_classification_counts.csv").exists()
     assert (tmp_path / "calibration_overall.csv").exists()
+
+
+def test_load_and_run_writes_stage_timings(tmp_path):
+    from desi_rv_audit.pipeline import load_and_run
+
+    root = Path(__file__).resolve().parents[1]
+    timings_path = tmp_path / "timings.csv"
+
+    load_and_run(
+        [root / "data" / "synthetic_epochs.csv"],
+        tmp_path / "outputs",
+        timings_output_path=timings_path,
+    )
+
+    timings = pd.read_csv(timings_path)
+    assert {"stage", "elapsed_seconds"}.issubset(timings.columns)
+    assert "load_inputs" in set(timings["stage"])
+    assert "save_outputs" in set(timings["stage"])
+    assert (timings["elapsed_seconds"] >= 0).all()

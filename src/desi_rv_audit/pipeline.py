@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from time import perf_counter
 
 import pandas as pd
 
@@ -42,6 +43,22 @@ class AuditOutputs:
     program_night_reproducibility: pd.DataFrame
     program_night_permutation_summary: pd.DataFrame
     run_manifest: dict[str, object]
+
+
+def _record_timing(
+    records: list[dict[str, object]] | None,
+    stage: str,
+    started_at: float,
+) -> float:
+    finished_at = perf_counter()
+    if records is not None:
+        records.append(
+            {
+                "stage": stage,
+                "elapsed_seconds": round(finished_at - started_at, 6),
+            }
+        )
+    return finished_at
 
 
 def summarize_epoch_quality(frame: pd.DataFrame, good_mask: pd.Series) -> pd.DataFrame:
@@ -116,13 +133,20 @@ def run_audit(
     program_night_min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
     program_night_run_permutation: bool = True,
     program_night_permutations: int = 20,
+    program_night_workers: int = 1,
     correction_summary: dict[str, object] | None = None,
     run_manifest: dict[str, object] | None = None,
+    timing_records: list[dict[str, object]] | None = None,
 ) -> AuditOutputs:
+    started_at = perf_counter()
     mask = quality_mask(frame, rules)
+    started_at = _record_timing(timing_records, "quality_mask", started_at)
     source_summary = summarize_sources(frame, mask)
+    started_at = _record_timing(timing_records, "summarize_sources", started_at)
     pairs = build_pair_table(frame, mask, max_pairs_per_source=max_pairs_per_source)
+    started_at = _record_timing(timing_records, "build_pair_table", started_at)
     epoch_quality = summarize_epoch_quality(frame, mask)
+    started_at = _record_timing(timing_records, "summarize_epoch_quality", started_at)
     overall = summarize_pair_residuals(pairs)
     formal_overall = (
         summarize_pair_residuals(pairs, z_column="PAIR_Z_FORMAL")
@@ -160,6 +184,7 @@ def run_audit(
         by_sn["SN_R_MIN_BIN"] = by_sn["SN_R_MIN_BIN"].astype(str)
     else:
         by_sn = pd.DataFrame()
+    started_at = _record_timing(timing_records, "calibration_summaries", started_at)
 
     reasons = rejection_reasons(frame, rules)
     rejection_counts = (
@@ -170,6 +195,7 @@ def run_audit(
         .reset_index(names="REASON")
     )
     correction_summary_frame = pd.DataFrame([correction_summary or {}])
+    started_at = _record_timing(timing_records, "rejection_counts", started_at)
     if run_program_night:
         program_night_result = run_program_night_experiment(
             pairs,
@@ -182,6 +208,7 @@ def run_audit(
             min_delta_days=program_night_min_delta_days,
             run_permutation=program_night_run_permutation,
             n_permutations=program_night_permutations,
+            permutation_workers=program_night_workers,
         )
         program_night_summary = program_night_result.summary
         program_night_by_program = program_night_result.by_program
@@ -194,6 +221,7 @@ def run_audit(
         program_night_offsets = pd.DataFrame()
         program_night_reproducibility = pd.DataFrame()
         program_night_permutation_summary = pd.DataFrame()
+    _record_timing(timing_records, "program_night", started_at)
 
     return AuditOutputs(
         source_summary=source_summary,
@@ -305,13 +333,20 @@ def load_and_run(
     program_night_min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
     program_night_run_permutation: bool = True,
     program_night_permutations: int = 20,
+    program_night_workers: int = 1,
+    timings_output_path: str | Path | None = None,
 ) -> AuditOutputs:
+    timing_records: list[dict[str, object]] | None = [] if timings_output_path else None
+    total_started_at = perf_counter()
+    started_at = total_started_at
     frame = load_many(paths, max_rows_per_file=max_rows_per_file, strict_desi_main=strict_desi_main)
+    started_at = _record_timing(timing_records, "load_inputs", started_at)
     frame = apply_velocity_calibration(
         frame,
         backup_correction_path=backup_correction_path,
         expected_backup_correction_md5=backup_correction_md5,
     )
+    started_at = _record_timing(timing_records, "apply_velocity_calibration", started_at)
     correction_summary = frame.attrs.get("backup_correction_summary", {})
     parameters = {
         "max_rows_per_file": max_rows_per_file,
@@ -330,6 +365,7 @@ def load_and_run(
         "program_night_min_delta_days": program_night_min_delta_days,
         "program_night_run_permutation": program_night_run_permutation,
         "program_night_permutations": program_night_permutations,
+        "program_night_workers": program_night_workers,
     }
     manifest = build_manifest(paths, correction_summary, parameters)
     outputs = run_audit(
@@ -346,8 +382,22 @@ def load_and_run(
         program_night_min_delta_days=program_night_min_delta_days,
         program_night_run_permutation=program_night_run_permutation,
         program_night_permutations=program_night_permutations,
+        program_night_workers=program_night_workers,
         correction_summary=correction_summary,
         run_manifest=manifest,
+        timing_records=timing_records,
     )
+    started_at = perf_counter()
     save_outputs(outputs, output_dir, write_heavy_outputs=write_heavy_outputs)
+    _record_timing(timing_records, "save_outputs", started_at)
+    if timing_records is not None:
+        timing_records.append(
+            {
+                "stage": "total",
+                "elapsed_seconds": round(perf_counter() - total_started_at, 6),
+            }
+        )
+        timings_path = Path(timings_output_path)
+        timings_path.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(timing_records).to_csv(timings_path, index=False)
     return outputs
