@@ -7,6 +7,7 @@ from .downloads import download_main_bundle
 from .manifest import add_output_files, write_manifest
 from .pipeline import expected_output_names, load_and_run
 from .plots import write_plots
+from .release import package_main_release
 from .report import build_report, write_report
 
 
@@ -104,6 +105,14 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("--source-summary", required=True)
     report.add_argument("--pairs", required=True)
     report.add_argument("--output", required=True)
+
+    package = subparsers.add_parser(
+        "package-main-release",
+        help="Package compact MAIN artifacts and deterministic ensemble release assets",
+    )
+    package.add_argument("--output-dir", required=True)
+    package.add_argument("--report-artifact-dir", required=True)
+    package.add_argument("--release-asset-dir", required=True)
     return parser
 
 
@@ -191,6 +200,17 @@ def main() -> None:
     elif args.command == "report":
         write_report(args.source_summary, args.pairs, args.output)
         print(f"Wrote {args.output}")
+    elif args.command == "package-main-release":
+        result = package_main_release(
+            args.output_dir,
+            args.report_artifact_dir,
+            args.release_asset_dir,
+        )
+        print(
+            "Packaged "
+            f"{len(result['compact_artifacts'])} compact artifacts and "
+            f"{len(result['ensemble_release_assets'])} ensemble assets."
+        )
 
 
 if __name__ == "__main__":

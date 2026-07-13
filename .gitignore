@@ -19,3 +19,4 @@ data/*.fits
 # Local notebooks/scratch files.
 scratch/
 tmp/
+release_assets/
