@@ -1,7 +1,14 @@
 import numpy as np
 import pandas as pd
 
-from desi_rv_audit.residuals import run_residual_zero_point_calibration
+from desi_rv_audit.residuals import _hash_fraction, run_residual_zero_point_calibration
+
+
+def test_residual_split_hash_is_stable_across_numeric_representations():
+    integers = pd.Series([1, 101, 202, 303, 123456789012345678, -55], dtype="int64")
+    strings = integers.astype("string")
+
+    np.testing.assert_array_equal(_hash_fraction(integers), _hash_fraction(strings))
 
 
 def test_zero_point_reduces_holdout_width_for_program_offset():

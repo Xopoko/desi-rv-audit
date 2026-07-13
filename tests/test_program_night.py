@@ -76,6 +76,36 @@ def test_exposure_shuffle_assigns_one_night_per_exposure():
     assert assigned.nunique() == 1
 
 
+def test_exposure_shuffle_keeps_pairs_that_map_to_the_same_fake_label():
+    pairs = pd.DataFrame(
+        [
+            {
+                "GROUP_ID": 1,
+                "DELTA_VRAD": 0.2,
+                "PAIR_ERROR": 1.0,
+                "PAIR_ERROR_FORMAL": 0.8,
+                "PROGRAM_1": "BACKUP",
+                "PROGRAM_2": "BACKUP",
+                "NIGHT_1": "20210101",
+                "NIGHT_2": "20210102",
+                "PROGRAM_PAIR": "BACKUP / BACKUP",
+                "DELTA_DAYS": 2.0,
+                "EXPOSURE_KEY_1": "MAIN|BACKUP|100",
+                "EXPOSURE_KEY_2": "MAIN|BACKUP|200",
+            }
+        ]
+    )
+    exposure_nights = pd.Series(
+        {"MAIN|BACKUP|100": "20210201", "MAIN|BACKUP|200": "20210201"},
+        dtype="string",
+    )
+
+    shuffled = _prepare_pairs(pairs, shuffled=True, exposure_nights=exposure_nights)
+
+    assert len(shuffled) == 1
+    assert shuffled.iloc[0]["LABEL_1"] == shuffled.iloc[0]["LABEL_2"]
+
+
 def test_source_group_fold_assignment_is_disjoint():
     group_ids = pd.Series([101, 101, 101, 202, 202, 303, 303, 303, 303])
     fold_ids = _hash_mod(group_ids, 5)
@@ -83,6 +113,13 @@ def test_source_group_fold_assignment_is_disjoint():
     for group_id in group_ids.unique():
         group_folds = np.unique(fold_ids[group_ids == group_id])
         assert len(group_folds) == 1
+
+
+def test_fold_assignment_is_stable_across_numeric_and_string_inputs():
+    values = [1, 101, 202, 303, 123456789012345678, -55]
+
+    assert _hash_mod(pd.Series(values), 5).tolist() == [4, 4, 1, 4, 2, 4]
+    assert _hash_mod(pd.Series([str(value) for value in values]), 5).tolist() == [4, 4, 1, 4, 2, 4]
 
 
 def test_parallel_permutation_workers_preserve_results():
@@ -132,3 +169,72 @@ def test_parallel_permutation_workers_preserve_results():
         serial.permutation_summary.sort_values(["PERMUTATION", "FOLD"]).reset_index(drop=True),
         parallel.permutation_summary.sort_values(["PERMUTATION", "FOLD"]).reset_index(drop=True),
     )
+    pdt.assert_frame_equal(
+        serial.permutation_offsets.sort_values(["PERMUTATION", "FOLD", "LABEL"]).reset_index(
+            drop=True
+        ),
+        parallel.permutation_offsets.sort_values(["PERMUTATION", "FOLD", "LABEL"]).reset_index(
+            drop=True
+        ),
+    )
+    pdt.assert_frame_equal(
+        serial.permutation_exposure_map.sort_values(
+            ["PERMUTATION", "EXPOSURE_KEY"]
+        ).reset_index(drop=True),
+        parallel.permutation_exposure_map.sort_values(
+            ["PERMUTATION", "EXPOSURE_KEY"]
+        ).reset_index(drop=True),
+    )
+    assert set(serial.permutation_offsets["CONTROL"]) == {
+        "FULL_PIPELINE_EXPOSURE_NIGHT_PERMUTATION"
+    }
+    assert not serial.permutation_exposure_map.empty
+
+
+def test_source_bootstrap_offsets_are_deterministic_and_vary():
+    rows = []
+    nights = ["20210101", "20210102", "20210103"]
+    for idx in range(180):
+        first = nights[idx % len(nights)]
+        second = nights[(idx + 1) % len(nights)]
+        rows.append(
+            {
+                "GROUP_ID": idx,
+                "DELTA_VRAD": 0.2 * ((idx % 11) - 5),
+                "PAIR_ERROR": 1.0,
+                "PAIR_ERROR_FORMAL": 0.8,
+                "PROGRAM_1": "BACKUP",
+                "PROGRAM_2": "BACKUP",
+                "NIGHT_1": first,
+                "NIGHT_2": second,
+                "PROGRAM_PAIR": "BACKUP / BACKUP",
+                "DELTA_DAYS": 2.0,
+                "EXPOSURE_KEY_1": f"MAIN|BACKUP|{first}|{idx}",
+                "EXPOSURE_KEY_2": f"MAIN|BACKUP|{second}|{idx}",
+            }
+        )
+    pairs = pd.DataFrame(rows)
+
+    first = run_program_night_experiment(
+        pairs,
+        n_folds=2,
+        min_pairs_per_label=5,
+        run_permutation=False,
+        n_bootstraps=2,
+    )
+    second = run_program_night_experiment(
+        pairs,
+        n_folds=2,
+        min_pairs_per_label=5,
+        run_permutation=False,
+        n_bootstraps=2,
+    )
+
+    pdt.assert_frame_equal(first.bootstrap_offsets, second.bootstrap_offsets)
+    assert set(first.bootstrap_offsets["BOOTSTRAP"]) == {0, 1}
+    pivot = first.bootstrap_offsets.pivot_table(
+        index=["FOLD", "LABEL"],
+        columns="BOOTSTRAP",
+        values="OFFSET_KMS",
+    ).dropna()
+    assert (np.abs(pivot[0] - pivot[1]) > 1e-10).any()

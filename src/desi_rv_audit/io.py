@@ -165,6 +165,9 @@ def _load_fits(
                 raise ValueError(f"{path} GAIA has fewer rows than RVTAB")
             if strict_desi_main:
                 _require_columns(path, "GAIA", gaia_full.names, STRICT_GAIA_COLUMNS)
+            for column in ("TARGETID", "EXPID", "FIBER"):
+                if column in rv_data.names and column in gaia_full.names:
+                    _assert_same_values(path, rv_data[:stop], gaia_full[:stop], column)
             gaia_data = gaia_full[:stop]
             gaia_frame = _fits_table_to_frame(gaia_data, GAIA_COLUMNS, stop)
             for column in gaia_frame.columns:

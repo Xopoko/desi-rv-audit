@@ -5,6 +5,9 @@
 Deterministic quality-control pipeline for multi-epoch radial-velocity
 measurements in the public DESI DR1 stellar catalogue.
 
+This is an independent exploratory analysis and is not an official DESI
+Collaboration data product.
+
 This repository is not an "AI discovers astrophysics" claim. The statistical
 core is ordinary, reproducible Python. Koposov et al. explicitly discuss
 night-specific radial-velocity systematics in DESI DR1. This audit independently
@@ -46,7 +49,8 @@ The pipeline:
    - graph connectedness diagnostics;
    - same-component-only holdout scoring;
    - independent source-half offset reproducibility;
-   - coarse exposure-level shuffled-night-within-program controls.
+   - full-pipeline exposure-level shuffled-night-within-program controls;
+   - Bayesian source-bootstrap offset fits for uncertainty propagation.
 
 The resulting offsets are diagnostics, not official catalogue corrections.
 
@@ -119,7 +123,8 @@ desi-rv-audit analyze \
   --strict-desi-main \
   --plots \
   --program-night-audit \
-  --program-night-permutations 20 \
+  --program-night-permutations 200 \
+  --program-night-bootstraps 50 \
   --program-night-workers 4 \
   --timings-output outputs/desi_main_audit/stage_timings.csv
 ```
@@ -139,7 +144,8 @@ desi-rv-audit analyze `
   --strict-desi-main `
   --plots `
   --program-night-audit `
-  --program-night-permutations 20 `
+  --program-night-permutations 200 `
+  --program-night-bootstraps 50 `
   --program-night-workers 4 `
   --timings-output outputs/desi_main_audit/stage_timings.csv
 ```
@@ -219,6 +225,9 @@ screening-outlier tables. The included reproducibility bundle is compact:
 - `reports/program_night_artifacts/by_program.csv`
 - `reports/program_night_artifacts/reproducibility.csv`
 - `reports/program_night_artifacts/permutation_summary.csv`
+- `reports/program_night_artifacts/program_night_permutation_offsets.csv`
+- `reports/program_night_artifacts/program_night_permutation_exposure_map.csv`
+- `reports/program_night_artifacts/program_night_bootstrap_offsets.csv`
 - `reports/program_night_artifacts/pair_cap_sensitivity.csv`
 - `reports/program_night_artifacts/correction_summary.csv`
 - `reports/program_night_artifacts/diagnostic_offsets_program_night.csv`

@@ -34,6 +34,18 @@ def _git_commit() -> str:
         return ""
 
 
+def _git_dirty() -> bool | str:
+    try:
+        status = subprocess.check_output(
+            ["git", "status", "--short"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return bool(status.strip())
+    except Exception:
+        return ""
+
+
 def _release_tag() -> str:
     return os.environ.get("DESI_RV_AUDIT_RELEASE_TAG", "").strip()
 
@@ -74,6 +86,7 @@ def build_manifest(
         )
     return {
         "git_commit": _git_commit(),
+        "git_dirty": _git_dirty(),
         "release_tag": _release_tag(),
         "command": _command_line(),
         "python": platform.python_version(),
@@ -86,6 +99,27 @@ def build_manifest(
         },
         "parameters": parameters,
     }
+
+
+def add_output_files(
+    manifest: dict[str, object],
+    output_dir: str | Path,
+) -> dict[str, object]:
+    result = dict(manifest)
+    root = Path(output_dir)
+    records = []
+    for path in sorted(root.iterdir()):
+        if not path.is_file() or path.name == "run_manifest.json":
+            continue
+        records.append(
+            {
+                "name": path.name,
+                "size": path.stat().st_size,
+                "sha256": _sha256(path),
+            }
+        )
+    result["output_files"] = records
+    return result
 
 
 def write_manifest(path: str | Path, manifest: dict[str, object]) -> None:

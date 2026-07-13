@@ -78,10 +78,16 @@ def _parser() -> argparse.ArgumentParser:
     analyze.add_argument("--program-night-min-delta-days", type=float, default=1.0)
     analyze.add_argument("--program-night-permutations", type=int, default=20)
     analyze.add_argument(
+        "--program-night-bootstraps",
+        type=int,
+        default=0,
+        help="Number of Bayesian source-bootstrap offset fits used for uncertainty propagation.",
+    )
+    analyze.add_argument(
         "--program-night-workers",
         type=int,
         default=1,
-        help="Number of threads used for shuffled PROGRAM:NIGHT permutations.",
+        help="Number of threads used for PROGRAM:NIGHT permutations and bootstraps.",
     )
     analyze.add_argument(
         "--timings-output",
@@ -131,6 +137,7 @@ def main() -> None:
             program_night_run_permutation=not args.no_program_night_permutation,
             program_night_permutations=args.program_night_permutations,
             program_night_workers=args.program_night_workers,
+            program_night_bootstraps=args.program_night_bootstraps,
             timings_output_path=args.timings_output,
         )
         if args.report_output:

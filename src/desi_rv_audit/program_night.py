@@ -9,6 +9,8 @@ from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import lsqr
 
+from .hashing import stable_hash_mod, stable_seed
+
 
 @dataclass(frozen=True)
 class ProgramNightResult:
@@ -17,6 +19,9 @@ class ProgramNightResult:
     offsets: pd.DataFrame
     reproducibility: pd.DataFrame
     permutation_summary: pd.DataFrame
+    permutation_offsets: pd.DataFrame
+    permutation_exposure_map: pd.DataFrame
+    bootstrap_offsets: pd.DataFrame
 
 
 DEFAULT_MAX_ABS_Z = 5.0
@@ -27,10 +32,7 @@ DEFAULT_MIN_DELTA_DAYS = 1.0
 
 
 def _hash_mod(values: pd.Series, modulo: int) -> np.ndarray:
-    hashed = pd.util.hash_pandas_object(values.astype("string"), index=False).to_numpy(
-        dtype=np.uint64
-    )
-    return (hashed % np.uint64(modulo)).astype(np.int64)
+    return stable_hash_mod(values, modulo)
 
 
 def _program_night_label(program: pd.Series, night: pd.Series) -> pd.Series:
@@ -42,10 +44,7 @@ def _program_night_label(program: pd.Series, night: pd.Series) -> pd.Series:
 
 
 def _seed_for(label: str) -> int:
-    return int(
-        pd.util.hash_pandas_object(pd.Series([label]), index=False).iloc[0]
-        % np.uint64(2**32)
-    )
+    return stable_seed(label)
 
 
 def _exposure_night_map(pairs: pd.DataFrame, permutation_index: int) -> pd.Series:
@@ -151,6 +150,7 @@ def _prepare_pairs(
     shuffled: bool = False,
     permutation_index: int = 0,
     min_delta_days: float = DEFAULT_MIN_DELTA_DAYS,
+    exposure_nights: pd.Series | None = None,
 ) -> pd.DataFrame:
     required = [
         "GROUP_ID",
@@ -172,7 +172,8 @@ def _prepare_pairs(
     optional = [column for column in ("GROUP_KIND",) if column in pairs.columns]
     data = pairs[required + optional].copy()
     if shuffled:
-        exposure_nights = _exposure_night_map(data, permutation_index=permutation_index)
+        if exposure_nights is None:
+            exposure_nights = _exposure_night_map(data, permutation_index=permutation_index)
         night1 = data["EXPOSURE_KEY_1"].astype(str).map(exposure_nights)
         night2 = data["EXPOSURE_KEY_2"].astype(str).map(exposure_nights)
     else:
@@ -192,7 +193,6 @@ def _prepare_pairs(
         & (data["PAIR_ERROR"] > 0)
         & (data["PAIR_ERROR_FORMAL"] > 0)
         & (data["DELTA_DAYS"] > min_delta_days)
-        & data["LABEL_1"].ne(data["LABEL_2"])
     )
     return data.loc[mask].copy()
 
@@ -205,9 +205,37 @@ def _fit_offsets(
     n_clip_iterations: int,
     damp: float,
 ) -> tuple[pd.Series, pd.Series, dict]:
-    endpoint_counts = pd.concat([train["LABEL_1"], train["LABEL_2"]], ignore_index=True).value_counts()
+    source_weight = (
+        pd.to_numeric(train["_SOURCE_WEIGHT"], errors="coerce").fillna(0.0)
+        if "_SOURCE_WEIGHT" in train.columns
+        else pd.Series(1.0, index=train.index)
+    )
+    train = train.loc[np.isfinite(source_weight) & (source_weight > 0)].copy()
+    train["_SOURCE_WEIGHT"] = source_weight.loc[train.index].to_numpy(dtype=float)
+    estimation_train = train.loc[train["LABEL_1"].ne(train["LABEL_2"])].copy()
+    endpoints = pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "LABEL": estimation_train["LABEL_1"],
+                    "WEIGHT": estimation_train["_SOURCE_WEIGHT"],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "LABEL": estimation_train["LABEL_2"],
+                    "WEIGHT": estimation_train["_SOURCE_WEIGHT"],
+                }
+            ),
+        ],
+        ignore_index=True,
+    )
+    endpoint_counts = endpoints.groupby("LABEL", sort=False)["WEIGHT"].sum()
     kept = endpoint_counts[endpoint_counts >= min_pairs_per_label].index
-    work = train[train["LABEL_1"].isin(kept) & train["LABEL_2"].isin(kept)].copy()
+    work = estimation_train[
+        estimation_train["LABEL_1"].isin(kept)
+        & estimation_train["LABEL_2"].isin(kept)
+    ].copy()
     work["_Z0"] = work["DELTA_VRAD"] / work["PAIR_ERROR"]
     work = work[np.abs(work["_Z0"]) <= max_abs_z]
     labels = pd.Index(sorted(pd.unique(pd.concat([work["LABEL_1"], work["LABEL_2"]]))))
@@ -252,7 +280,12 @@ def _fit_offsets(
         current_right_idx = current["LABEL_2"].map(label_index).to_numpy(dtype=np.int64)
         source_counts = current["GROUP_ID"].value_counts()
         source_scale = current["GROUP_ID"].map(source_counts).to_numpy(dtype=float)
-        row_weight = (1.0 / current["PAIR_ERROR"].to_numpy(dtype=float)) / np.sqrt(source_scale)
+        source_weight = current["_SOURCE_WEIGHT"].to_numpy(dtype=float)
+        row_weight = (
+            (1.0 / current["PAIR_ERROR"].to_numpy(dtype=float))
+            * np.sqrt(source_weight)
+            / np.sqrt(source_scale)
+        )
         matrix = coo_matrix(
             (
                 np.r_[row_weight, -row_weight],
@@ -292,6 +325,9 @@ def _fit_offsets(
     stats = {
         "N_LABELS": int(len(labels)),
         "N_TRAIN_PAIRS": int(len(final_current)),
+        "N_EFFECTIVE_SOURCE_DRAWS": float(
+            final_current.groupby("GROUP_ID", sort=False)["_SOURCE_WEIGHT"].first().sum()
+        ),
         "N_CONNECTED_COMPONENTS": int(n_components),
         "LARGEST_COMPONENT_LABEL_FRACTION": float(label_component_sizes.max() / len(labels)),
         "LARGEST_COMPONENT_PAIR_FRACTION": float(component_pair_counts.max() / max(len(work), 1)),
@@ -556,16 +592,18 @@ def _run_permutation(
     n_clip_iterations: int,
     damp: float,
     min_delta_days: float,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    exposure_nights = _exposure_night_map(pairs, permutation_index=permutation_index)
     shuffled = _prepare_pairs(
         pairs,
         shuffled=True,
         permutation_index=permutation_index,
         min_delta_days=min_delta_days,
+        exposure_nights=exposure_nights,
     )
     if shuffled.empty:
-        return pd.DataFrame()
-    permutation_frame, _, _ = _run_folds(
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    permutation_frame, _, permutation_offsets = _run_folds(
         shuffled,
         n_folds=n_folds,
         min_pairs_per_label=min_pairs_per_label,
@@ -575,8 +613,56 @@ def _run_permutation(
         damp=damp,
     )
     permutation_frame["PERMUTATION"] = permutation_index
-    permutation_frame["CONTROL"] = "SHUFFLED_EXPOSURE_NIGHT_WITHIN_PROGRAM"
-    return permutation_frame
+    permutation_frame["CONTROL"] = "FULL_PIPELINE_EXPOSURE_NIGHT_PERMUTATION"
+    permutation_offsets["PERMUTATION"] = permutation_index
+    permutation_offsets["CONTROL"] = "FULL_PIPELINE_EXPOSURE_NIGHT_PERMUTATION"
+    exposure_map = exposure_nights.rename("SHUFFLED_NIGHT").rename_axis("EXPOSURE_KEY").reset_index()
+    exposure_map["PERMUTATION"] = permutation_index
+    exposure_map["CONTROL"] = "FULL_PIPELINE_EXPOSURE_NIGHT_PERMUTATION"
+    return permutation_frame, permutation_offsets, exposure_map
+
+
+def _run_source_bootstrap(
+    base: pd.DataFrame,
+    bootstrap_index: int,
+    n_folds: int,
+    min_pairs_per_label: int,
+    max_abs_z: float,
+    clip_sigma: float,
+    n_clip_iterations: int,
+    damp: float,
+) -> pd.DataFrame:
+    fold_ids = _hash_mod(base["GROUP_ID"], n_folds)
+    tables: list[pd.DataFrame] = []
+    for fold in range(n_folds):
+        train = base.loc[fold_ids != fold].copy()
+        source_ids = pd.Index(train["GROUP_ID"].drop_duplicates())
+        rng = np.random.default_rng(_seed_for(f"source-bootstrap-v1:{bootstrap_index}:{fold}"))
+        source_weights = pd.Series(rng.exponential(1.0, len(source_ids)), index=source_ids)
+        train["_SOURCE_WEIGHT"] = train["GROUP_ID"].map(source_weights).to_numpy(dtype=float)
+        offsets, components, _ = _fit_offsets(
+            train,
+            min_pairs_per_label=min_pairs_per_label,
+            max_abs_z=max_abs_z,
+            clip_sigma=clip_sigma,
+            n_clip_iterations=n_clip_iterations,
+            damp=damp,
+        )
+        if offsets.empty:
+            continue
+        tables.append(
+            pd.DataFrame(
+                {
+                    "BOOTSTRAP": bootstrap_index,
+                    "FOLD": fold,
+                    "LABEL": offsets.index.astype(str),
+                    "OFFSET_KMS": offsets.to_numpy(dtype=float),
+                    "COMPONENT": offsets.index.map(components).to_numpy(dtype=int),
+                    "SOURCE_WEIGHT_SCHEME": "BAYESIAN_EXPONENTIAL_V1",
+                }
+            )
+        )
+    return pd.concat(tables, ignore_index=True, sort=False) if tables else pd.DataFrame()
 
 
 def run_program_night_experiment(
@@ -591,10 +677,15 @@ def run_program_night_experiment(
     run_permutation: bool = True,
     n_permutations: int = 20,
     permutation_workers: int = 1,
+    n_bootstraps: int = 0,
+    bootstrap_workers: int | None = None,
 ) -> ProgramNightResult:
     base = _prepare_pairs(pairs, shuffled=False, min_delta_days=min_delta_days)
     if base.empty:
         return ProgramNightResult(
+            pd.DataFrame(),
+            pd.DataFrame(),
+            pd.DataFrame(),
             pd.DataFrame(),
             pd.DataFrame(),
             pd.DataFrame(),
@@ -624,11 +715,13 @@ def run_program_night_experiment(
         damp=damp,
     )
     permutation_summary = pd.DataFrame()
+    permutation_offsets = pd.DataFrame()
+    permutation_exposure_map = pd.DataFrame()
     if run_permutation:
         worker_count = max(1, int(permutation_workers))
         if worker_count > 1 and n_permutations > 1:
             with ThreadPoolExecutor(max_workers=min(worker_count, n_permutations)) as executor:
-                permutation_frames = list(
+                permutation_results = list(
                     executor.map(
                         lambda permutation_index: _run_permutation(
                             pairs,
@@ -645,7 +738,7 @@ def run_program_night_experiment(
                     )
                 )
         else:
-            permutation_frames = [
+            permutation_results = [
                 _run_permutation(
                     pairs,
                     permutation_index,
@@ -659,7 +752,71 @@ def run_program_night_experiment(
                 )
                 for permutation_index in range(n_permutations)
             ]
-        permutation_frames = [frame for frame in permutation_frames if not frame.empty]
+        permutation_frames = [
+            summary for summary, _, _ in permutation_results if not summary.empty
+        ]
+        permutation_offset_frames = [
+            offsets for _, offsets, _ in permutation_results if not offsets.empty
+        ]
+        permutation_exposure_frames = [
+            exposure_map
+            for _, _, exposure_map in permutation_results
+            if not exposure_map.empty
+        ]
         if permutation_frames:
             permutation_summary = pd.concat(permutation_frames, ignore_index=True, sort=False)
-    return ProgramNightResult(summary, by_program, offsets, reproducibility, permutation_summary)
+        if permutation_offset_frames:
+            permutation_offsets = pd.concat(
+                permutation_offset_frames,
+                ignore_index=True,
+                sort=False,
+            )
+        if permutation_exposure_frames:
+            permutation_exposure_map = pd.concat(
+                permutation_exposure_frames,
+                ignore_index=True,
+                sort=False,
+            )
+
+    bootstrap_offsets = pd.DataFrame()
+    if n_bootstraps > 0:
+        worker_count = max(1, int(bootstrap_workers or permutation_workers))
+        bootstrap_args = dict(
+            n_folds=n_folds,
+            min_pairs_per_label=min_pairs_per_label,
+            max_abs_z=max_abs_z,
+            clip_sigma=clip_sigma,
+            n_clip_iterations=n_clip_iterations,
+            damp=damp,
+        )
+        if worker_count > 1 and n_bootstraps > 1:
+            with ThreadPoolExecutor(max_workers=min(worker_count, n_bootstraps)) as executor:
+                bootstrap_frames = list(
+                    executor.map(
+                        lambda bootstrap_index: _run_source_bootstrap(
+                            base,
+                            bootstrap_index,
+                            **bootstrap_args,
+                        ),
+                        range(n_bootstraps),
+                    )
+                )
+        else:
+            bootstrap_frames = [
+                _run_source_bootstrap(base, bootstrap_index, **bootstrap_args)
+                for bootstrap_index in range(n_bootstraps)
+            ]
+        bootstrap_frames = [frame for frame in bootstrap_frames if not frame.empty]
+        if bootstrap_frames:
+            bootstrap_offsets = pd.concat(bootstrap_frames, ignore_index=True, sort=False)
+
+    return ProgramNightResult(
+        summary,
+        by_program,
+        offsets,
+        reproducibility,
+        permutation_summary,
+        permutation_offsets,
+        permutation_exposure_map,
+        bootstrap_offsets,
+    )

@@ -7,6 +7,8 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import lsqr
 
+from .hashing import stable_hash64
+
 
 DIMENSION_COLUMNS = {
     "PROGRAM": ("PROGRAM_1", "PROGRAM_2"),
@@ -25,8 +27,10 @@ class ZeroPointResult:
 
 
 def _hash_fraction(values: pd.Series) -> np.ndarray:
-    hashed = pd.util.hash_pandas_object(values.astype("string"), index=False).to_numpy(
-        dtype=np.uint64
+    hashed = np.fromiter(
+        (stable_hash64(value) for value in values),
+        dtype=np.uint64,
+        count=len(values),
     )
     return hashed.astype(np.float64) / float(np.iinfo(np.uint64).max)
 

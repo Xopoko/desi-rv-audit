@@ -9,7 +9,8 @@ import pandas as pd
 from .calibration import add_quantile_bin, summarize_pair_residuals
 from .corrections import apply_velocity_calibration
 from .io import load_many
-from .manifest import build_manifest, write_manifest
+from .hashing import FOLD_HASH_ALGORITHM
+from .manifest import add_output_files, build_manifest, write_manifest
 from .pairs import build_pair_table
 from .program_night import (
     DEFAULT_CLIP_ITERATIONS,
@@ -42,6 +43,9 @@ class AuditOutputs:
     program_night_offsets: pd.DataFrame
     program_night_reproducibility: pd.DataFrame
     program_night_permutation_summary: pd.DataFrame
+    program_night_permutation_offsets: pd.DataFrame
+    program_night_permutation_exposure_map: pd.DataFrame
+    program_night_bootstrap_offsets: pd.DataFrame
     run_manifest: dict[str, object]
 
 
@@ -134,6 +138,7 @@ def run_audit(
     program_night_run_permutation: bool = True,
     program_night_permutations: int = 20,
     program_night_workers: int = 1,
+    program_night_bootstraps: int = 0,
     correction_summary: dict[str, object] | None = None,
     run_manifest: dict[str, object] | None = None,
     timing_records: list[dict[str, object]] | None = None,
@@ -209,18 +214,26 @@ def run_audit(
             run_permutation=program_night_run_permutation,
             n_permutations=program_night_permutations,
             permutation_workers=program_night_workers,
+            n_bootstraps=program_night_bootstraps,
+            bootstrap_workers=program_night_workers,
         )
         program_night_summary = program_night_result.summary
         program_night_by_program = program_night_result.by_program
         program_night_offsets = program_night_result.offsets
         program_night_reproducibility = program_night_result.reproducibility
         program_night_permutation_summary = program_night_result.permutation_summary
+        program_night_permutation_offsets = program_night_result.permutation_offsets
+        program_night_permutation_exposure_map = program_night_result.permutation_exposure_map
+        program_night_bootstrap_offsets = program_night_result.bootstrap_offsets
     else:
         program_night_summary = pd.DataFrame()
         program_night_by_program = pd.DataFrame()
         program_night_offsets = pd.DataFrame()
         program_night_reproducibility = pd.DataFrame()
         program_night_permutation_summary = pd.DataFrame()
+        program_night_permutation_offsets = pd.DataFrame()
+        program_night_permutation_exposure_map = pd.DataFrame()
+        program_night_bootstrap_offsets = pd.DataFrame()
     _record_timing(timing_records, "program_night", started_at)
 
     return AuditOutputs(
@@ -241,6 +254,9 @@ def run_audit(
         program_night_offsets=program_night_offsets,
         program_night_reproducibility=program_night_reproducibility,
         program_night_permutation_summary=program_night_permutation_summary,
+        program_night_permutation_offsets=program_night_permutation_offsets,
+        program_night_permutation_exposure_map=program_night_permutation_exposure_map,
+        program_night_bootstrap_offsets=program_night_bootstrap_offsets,
         run_manifest=run_manifest or {},
     )
 
@@ -310,7 +326,22 @@ def save_outputs(
         output_dir / "program_night_permutation_summary.csv",
         index=False,
     )
-    write_manifest(output_dir / "run_manifest.json", outputs.run_manifest)
+    outputs.program_night_permutation_offsets.to_csv(
+        output_dir / "program_night_permutation_offsets.csv",
+        index=False,
+    )
+    outputs.program_night_permutation_exposure_map.to_csv(
+        output_dir / "program_night_permutation_exposure_map.csv",
+        index=False,
+    )
+    outputs.program_night_bootstrap_offsets.to_csv(
+        output_dir / "program_night_bootstrap_offsets.csv",
+        index=False,
+    )
+    write_manifest(
+        output_dir / "run_manifest.json",
+        add_output_files(outputs.run_manifest, output_dir),
+    )
 
 
 def load_and_run(
@@ -334,6 +365,7 @@ def load_and_run(
     program_night_run_permutation: bool = True,
     program_night_permutations: int = 20,
     program_night_workers: int = 1,
+    program_night_bootstraps: int = 0,
     timings_output_path: str | Path | None = None,
 ) -> AuditOutputs:
     timing_records: list[dict[str, object]] | None = [] if timings_output_path else None
@@ -366,6 +398,9 @@ def load_and_run(
         "program_night_run_permutation": program_night_run_permutation,
         "program_night_permutations": program_night_permutations,
         "program_night_workers": program_night_workers,
+        "program_night_bootstraps": program_night_bootstraps,
+        "fold_hash_algorithm": FOLD_HASH_ALGORITHM,
+        "gaia_alignment_contract": "POSITIONAL_LENGTH_CHECK_WITH_SHARED_KEY_VALIDATION",
     }
     manifest = build_manifest(paths, correction_summary, parameters)
     outputs = run_audit(
@@ -383,6 +418,7 @@ def load_and_run(
         program_night_run_permutation=program_night_run_permutation,
         program_night_permutations=program_night_permutations,
         program_night_workers=program_night_workers,
+        program_night_bootstraps=program_night_bootstraps,
         correction_summary=correction_summary,
         run_manifest=manifest,
         timing_records=timing_records,
@@ -400,4 +436,8 @@ def load_and_run(
         timings_path = Path(timings_output_path)
         timings_path.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(timing_records).to_csv(timings_path, index=False)
+        write_manifest(
+            Path(output_dir) / "run_manifest.json",
+            add_output_files(outputs.run_manifest, output_dir),
+        )
     return outputs
