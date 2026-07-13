@@ -35,7 +35,9 @@ Supported claim:
   --strict-desi-main \
   --plots \
   --program-night-audit \
-  --program-night-permutations 20
+  --program-night-permutations 100 \
+  --program-night-bootstraps 50 \
+  --program-night-workers 4
 ```
 
 Local run:
@@ -44,8 +46,8 @@ Local run:
 - Quality-approved epoch pairs: 2,171,341
 - Constant-RV screening outliers: 25,953
 - Strict constant-RV screening outliers: 12,141
-- Runtime: 1,831.86 s
-- Maximum resident set size: 11.66 GiB
+- Runtime: 10,753.05 s (2 h 59 min)
+- Maximum resident set size: 10.89 GiB
 
 The 25,953 outliers and 12,141 strict outliers come from the baseline
 constant-RV screening layer before applying the diagnostic `PROGRAM:NIGHT`
@@ -75,19 +77,18 @@ Mean over five source-grouped folds:
 
 | Metric | Real before | Real after | Shuffled before | Shuffled after |
 |---|---:|---:|---:|---:|
-| Raw robust scatter, km/s | 3.651 | 3.157 | 3.654 | 3.496 |
-| Normalized central width | 1.019 | 0.885 | 0.936 | 0.899 |
-| Macro normalized width by program pair | 0.972 | 0.909 | 0.927 | 0.915 |
+| Raw robust scatter, km/s | 3.651 | 3.157 | 3.652 | 3.480 |
+| Normalized central width | 1.019 | 0.885 | 0.939 | 0.899 |
+| Macro normalized width by program pair | 0.973 | 0.908 | 0.930 | 0.914 |
 | `|z| > 3` | 0.051 | 0.040 | 0.043 | 0.038 |
 | `|z| > 5` | 0.022 | 0.020 | 0.018 | 0.017 |
-| Mean Gaussian pair loss | 4.358 | 4.160 | 4.052 | 3.981 |
+| Mean Gaussian pair loss | 4.358 | 4.160 | 4.062 | 3.988 |
 
 The real `PROGRAM:NIGHT` model reduces holdout raw robust scatter by
-0.495 km/s, or 13.5%. Coarse exposure-level shuffled-night controls reduce raw
-scatter by 0.158 km/s on average, or 4.3%. Across 20 permutations, shuffled
-improvement ranges from 0.096 to 0.234 km/s; no shuffled permutation reaches
-the real improvement. With only 20 permutations, this is a coarse negative
-control rather than a strong formal significance claim.
+0.495 km/s, or 13.5%. Exposure-level shuffled-night controls reduce raw scatter
+by 0.171 km/s on average, or 4.7%. Across 100 permutations, shuffled improvement
+ranges from 0.072 to 0.294 km/s; no shuffled permutation reaches the real
+improvement. The corrected empirical exceedance estimate is `1 / 101 = 0.0099`.
 
 ![Source-grouped fold widths](program_night_artifacts/source_fold_widths.png)
 
@@ -98,11 +99,11 @@ Mean over five folds:
 | Program pair | N holdout total | Raw before | Raw after | Reduction | Width before | Width after |
 |---|---:|---:|---:|---:|---:|---:|
 | `BACKUP / BACKUP` | 996,012 | 3.663 | 2.943 | 19.7% | 1.081 | 0.871 |
-| `BACKUP / BRIGHT` | 220,788 | 3.723 | 3.610 | 3.0% | 0.946 | 0.917 |
-| `BACKUP / DARK` | 27,683 | 5.584 | 5.460 | 2.2% | 0.959 | 0.934 |
-| `BRIGHT / BRIGHT` | 251,116 | 2.906 | 2.781 | 4.3% | 0.893 | 0.855 |
-| `BRIGHT / DARK` | 118,127 | 4.396 | 4.169 | 5.2% | 0.996 | 0.935 |
-| `DARK / DARK` | 116,420 | 3.494 | 3.426 | 1.9% | 0.960 | 0.939 |
+| `BACKUP / BRIGHT` | 220,806 | 3.723 | 3.610 | 3.0% | 0.946 | 0.917 |
+| `BACKUP / DARK` | 27,705 | 5.575 | 5.457 | 2.1% | 0.961 | 0.930 |
+| `BRIGHT / BRIGHT` | 251,120 | 2.906 | 2.780 | 4.3% | 0.893 | 0.855 |
+| `BRIGHT / DARK` | 118,076 | 4.398 | 4.170 | 5.2% | 0.995 | 0.935 |
+| `DARK / DARK` | 116,360 | 3.494 | 3.431 | 1.8% | 0.961 | 0.940 |
 
 ## Graph and Solver Diagnostics
 
@@ -111,12 +112,12 @@ Mean over folds:
 - Connected components: 2
 - Largest component label fraction: 0.996
 - Largest component pair fraction: 0.998
-- Holdout pairs scored in the same train component: 346,029 per fold
-- Holdout pairs crossing train components and excluded: 1,307 per fold
+- Holdout pairs scored in the same train component: 346,016 per fold
+- Holdout pairs crossing train components and excluded: 1,321 per fold
 - `LSQR_ISTOP`: 2 in all folds
-- Mean `LSQR_ACOND`: 737
+- Mean `LSQR_ACOND`: 752
 - Mean `LSQR_R1NORM`: 778
-- Mean `LSQR_ARNORM`: 0.0036
+- Mean `LSQR_ARNORM`: 0.0038
 - Gaia-grouped program-night pairs: 99.93%
 
 Offsets are centered within connected components and are interpreted only as
@@ -129,15 +130,29 @@ sources for known nights, not extrapolation to unseen nights.
 
 ## Independent-Half Reproducibility
 
-Independent source halves recover 484 common `PROGRAM:NIGHT` labels after
+Independent source halves recover 483 common `PROGRAM:NIGHT` labels after
 component and gauge alignment:
 
 - Offset correlation: 0.980
-- Slope B on A: 0.994
-- Median absolute difference: 0.096 km/s
-- Robust width of offset differences: 0.174 km/s
+- Slope B on A: 1.002
+- Median absolute difference: 0.107 km/s
+- Robust width of offset differences: 0.182 km/s
 
 This is the main check against shared-source leakage or pair-row noise reuse.
+
+Program-specific and within-program-demeaned checks from the same source-half
+procedure:
+
+| Scope | N labels | Pearson r | Spearman rho | Slope | Median abs diff, km/s | Robust diff width, km/s |
+|---|---:|---:|---:|---:|---:|---:|
+| All, demeaned within program | 483 | 0.977 | 0.941 | 0.995 | 0.119 | 0.184 |
+| `BACKUP` | 83 | 0.999 | 0.996 | 0.995 | 0.048 | 0.086 |
+| `BRIGHT` | 228 | 0.955 | 0.957 | 0.992 | 0.098 | 0.164 |
+| `DARK` | 172 | 0.884 | 0.840 | 1.003 | 0.162 | 0.258 |
+
+The aggregate correlation is therefore not solely induced by persistent
+between-program differences. Reproducibility is strongest for `BACKUP`, which
+is also where the residual-scatter reduction is largest.
 
 This is an exploratory analysis developed iteratively on the public MAIN DR1
 sample. Source-grouped folds prevent source reuse within each evaluation, but
@@ -149,9 +164,9 @@ an independent survey, data slice, or future release.
 
 | Max pairs/source | Program-night pairs | Raw before | Raw after | Reduction | Backup/backup reduction | Offset r |
 |---:|---:|---:|---:|---:|---:|---:|
-| 10 | 1,694,555 | 3.639 | 3.137 | 13.8% | 0.724 km/s | 0.981 |
+| 10 | 1,694,555 | 3.638 | 3.137 | 13.8% | 0.723 km/s | 0.980 |
 | 20 | 1,736,682 | 3.651 | 3.157 | 13.5% | 0.720 km/s | 0.980 |
-| 50 | 1,752,357 | 3.654 | 3.160 | 13.5% | 0.720 km/s | 0.980 |
+| 50 | 1,752,357 | 3.654 | 3.160 | 13.5% | 0.719 km/s | 0.980 |
 
 ## Boundaries
 
@@ -177,8 +192,13 @@ This audit does not prove:
 - `reports/program_night_artifacts/by_program.csv`
 - `reports/program_night_artifacts/diagnostic_offsets_program_night.csv`
 - `reports/program_night_artifacts/reproducibility.csv`
+- `reports/program_night_artifacts/reproducibility_by_program.csv`
+- `reports/program_night_artifacts/reproducibility_run_manifest.json`
 - `reports/program_night_artifacts/permutation_summary.csv`
 - `reports/program_night_artifacts/pair_cap_sensitivity.csv`
+- `reports/program_night_artifacts/pair_cap_sensitivity_manifest.json`
 - `reports/program_night_artifacts/correction_summary.csv`
 - `reports/program_night_artifacts/source_fold_widths.png`
 - `reports/program_night_artifacts/run_manifest.json`
+- `reports/program_night_artifacts/ensemble_release_manifest.json`
+- `reports/program_night_artifacts/stage_timings.csv`

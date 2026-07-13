@@ -1,5 +1,5 @@
 {
-  "command": "desi-rv-audit analyze data/desi_main/rvpix_exp-main-backup.fits data/desi_main/rvpix_exp-main-bright.fits data/desi_main/rvpix_exp-main-dark.fits --output-dir outputs/desi_main_audit --max-pairs-per-source 20 --lite-output --backup-correction data/desi_corrections/backup_correction.fits --report-output reports/desi_main_audit_report.md --strict-desi-main --plots --program-night-audit --program-night-permutations 100 --program-night-bootstraps 50 --program-night-workers 4 --timings-output outputs/desi_main_audit/stage_timings.csv",
+  "command": "desi-rv-audit analyze data/desi_main/rvpix_exp-main-backup.fits data/desi_main/rvpix_exp-main-bright.fits data/desi_main/rvpix_exp-main-dark.fits --output-dir outputs/cap20 --max-pairs-per-source 20 --lite-output --backup-correction data/desi_corrections/backup_correction.fits --strict-desi-main --program-night-audit --no-program-night-permutation --timings-output outputs/cap20/stage_timings.csv",
   "correction": {
     "CORRECTION_MD5": "f48a4b21b541e94d61f4372f4c555f12",
     "CORRECTION_MD5_EXPECTED": "f48a4b21b541e94d61f4372f4c555f12",
@@ -14,7 +14,7 @@
     "N_NON_BACKUP_TARGETID_MATCHES": 27,
     "doi": "10.5281/zenodo.15469272"
   },
-  "git_commit": "a08fce3170f7b6fc11c60c78f071c30b073ca9b1",
+  "git_commit": "8fc6ba766a10fee9aeaf3d04e1c28b8e6ed4c89c",
   "git_dirty": false,
   "input_files": [
     {
@@ -95,19 +95,9 @@
       "size": 400
     },
     {
-      "name": "formal_vs_calibrated_residual_distribution.png",
-      "sha256": "55e6de637b379f63d896b1d3a03c5a4a6a42ade68d9a2e3997a01081794fa615",
-      "size": 61743
-    },
-    {
-      "name": "interday_width_by_program_pair.png",
-      "sha256": "0e7611f4f4c6c96069ef2ce481d70ac860856ac7eae4797002c5ad5307ae1942",
-      "size": 59780
-    },
-    {
       "name": "program_night_bootstrap_offsets.csv",
-      "sha256": "744bdd5433d93695949678346dfe596456edfb4493befbcd60d095fe3045aa47",
-      "size": 8471316
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
     },
     {
       "name": "program_night_by_program.csv",
@@ -116,28 +106,23 @@
     },
     {
       "name": "program_night_permutation_exposure_map.csv",
-      "sha256": "dc99e2457e0aa73db167aaa07c57a0862c5748b1ba1417b4554af975c7a52d08",
-      "size": 45888878
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
     },
     {
       "name": "program_night_permutation_offsets.csv",
-      "sha256": "910aed945056010bac4b424697fe8dc9b1fff195108736bdad852442d6c1fb44",
-      "size": 21818917
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
     },
     {
       "name": "program_night_permutation_summary.csv",
-      "sha256": "fc9e916a55f4e743bb1ae806892b75293749acf560163ef3b270d3bac469bc61",
-      "size": 214318
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
     },
     {
       "name": "program_night_reproducibility.csv",
-      "sha256": "00e6b8f6145d4a2e37138c655429efeefc950e92deaf472bac4e0474584def4d",
-      "size": 252
-    },
-    {
-      "name": "program_night_source_fold_widths.png",
-      "sha256": "801341abdd90c569e098060e33e39d5ed51ab276fa24162725e95dc4c9e0a98b",
-      "size": 56469
+      "sha256": "53f9330548678334e6ab22777e713fbd0b8ee20f4064669d62bd5800d485c515",
+      "size": 868
     },
     {
       "name": "program_night_summary.csv",
@@ -156,8 +141,8 @@
     },
     {
       "name": "stage_timings.csv",
-      "sha256": "97fa5ba24b8fcbfe6b5832e880b9e0ccb7208f0ca2b3aab60c39cd8445eda5aa",
-      "size": 315
+      "sha256": "a509227c05fd40ef36d13a85ca76685daed1fef573229c49ad58d45b7c925930",
+      "size": 311
     }
   ],
   "packages": {
@@ -174,7 +159,7 @@
     "max_pairs_per_source": 20,
     "max_rows_per_file": null,
     "min_sn_r": 5.0,
-    "program_night_bootstraps": 50,
+    "program_night_bootstraps": 0,
     "program_night_clip_iterations": 3,
     "program_night_clip_sigma": 3.5,
     "program_night_damp": 0.2,
@@ -182,9 +167,9 @@
     "program_night_max_abs_z": 5.0,
     "program_night_min_delta_days": 1.0,
     "program_night_min_pairs_per_label": 200,
-    "program_night_permutations": 100,
-    "program_night_run_permutation": true,
-    "program_night_workers": 4,
+    "program_night_permutations": 20,
+    "program_night_run_permutation": false,
+    "program_night_workers": 1,
     "run_program_night": true,
     "strict_desi_main": true,
     "write_heavy_outputs": false

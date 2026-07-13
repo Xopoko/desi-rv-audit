@@ -1,0 +1,77 @@
+{
+  "analysis_git_commit": "a08fce3170f7b6fc11c60c78f071c30b073ca9b1",
+  "analysis_release_tag": "v0.3.0",
+  "compact_artifacts": [
+    {
+      "name": "summary.csv",
+      "sha256": "c2b0ffa002f200732b91ad6debdea806aa6e6fd2dce5c0477fdfade32e8b523a",
+      "size": 2867
+    },
+    {
+      "name": "by_program.csv",
+      "sha256": "ffd08563188200bdd0508420c253b9dd6576f4b22a5c658cdafd4e3fe1ece738",
+      "size": 7280
+    },
+    {
+      "name": "reproducibility.csv",
+      "sha256": "00e6b8f6145d4a2e37138c655429efeefc950e92deaf472bac4e0474584def4d",
+      "size": 252
+    },
+    {
+      "name": "permutation_summary.csv",
+      "sha256": "fc9e916a55f4e743bb1ae806892b75293749acf560163ef3b270d3bac469bc61",
+      "size": 214318
+    },
+    {
+      "name": "correction_summary.csv",
+      "sha256": "3b3d1eae242b8b9d7bf86cd74a2b94ce7da13c8c02bc1bc038af3015b73362c4",
+      "size": 453
+    },
+    {
+      "name": "diagnostic_offsets_program_night.csv",
+      "sha256": "8c8e4c5bb787c7534c2c4a2a2b0b1c2b77810475e25b6ec2f533889d23eb0926",
+      "size": 100396
+    },
+    {
+      "name": "source_fold_widths.png",
+      "sha256": "801341abdd90c569e098060e33e39d5ed51ab276fa24162725e95dc4c9e0a98b",
+      "size": 56469
+    },
+    {
+      "name": "run_manifest.json",
+      "sha256": "8501b6a0643e2b36455635e4f424bced2890098e711743630afc266a091239dd",
+      "size": 7006
+    },
+    {
+      "name": "stage_timings.csv",
+      "sha256": "97fa5ba24b8fcbfe6b5832e880b9e0ccb7208f0ca2b3aab60c39cd8445eda5aa",
+      "size": 315
+    }
+  ],
+  "ensemble_release_assets": [
+    {
+      "gzip_name": "program_night_permutation_offsets.csv.gz",
+      "gzip_sha256": "38bb2f2d3905482591b7638717a498da80a14c3408c4b15d23f0e36dd71db13d",
+      "gzip_size": 3661687,
+      "name": "program_night_permutation_offsets.csv",
+      "sha256": "910aed945056010bac4b424697fe8dc9b1fff195108736bdad852442d6c1fb44",
+      "size": 21818917
+    },
+    {
+      "gzip_name": "program_night_permutation_exposure_map.csv.gz",
+      "gzip_sha256": "80bade3799731beaa82902a92efe35113d625613939a7bb067794b370c7c9663",
+      "gzip_size": 3969808,
+      "name": "program_night_permutation_exposure_map.csv",
+      "sha256": "dc99e2457e0aa73db167aaa07c57a0862c5748b1ba1417b4554af975c7a52d08",
+      "size": 45888878
+    },
+    {
+      "gzip_name": "program_night_bootstrap_offsets.csv.gz",
+      "gzip_sha256": "72544b6d11dbc9edd7cfa76173f61f5692199a669f4a7b3d437d64ce8874a12d",
+      "gzip_size": 1776218,
+      "name": "program_night_bootstrap_offsets.csv",
+      "sha256": "744bdd5433d93695949678346dfe596456edfb4493befbcd60d095fe3045aa47",
+      "size": 8471316
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+stage,elapsed_seconds
+load_inputs,39.031663
+apply_velocity_calibration,9.986764
+quality_mask,2.061204
+summarize_sources,35.105972
+build_pair_table,49.177544
+summarize_epoch_quality,6.548644
+calibration_summaries,6.353984
+rejection_counts,2.369675
+program_night,10553.996761
+save_outputs,4.188486
+total,10721.165012

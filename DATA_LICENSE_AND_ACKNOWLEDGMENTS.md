@@ -9,7 +9,8 @@ acknowledgment requirements documented by DESI:
 
 https://data.desi.lbl.gov/doc/acknowledgments/
 
-The compact CSV and PNG files under `reports/program_night_artifacts/` are
+The compact CSV and PNG files under `reports/program_night_artifacts/`, together
+with the compressed permutation/bootstrap release assets, are
 transformed/derived artifacts from public DESI DR1 data and should be treated as
 DESI-derived data products under those DESI terms.
 

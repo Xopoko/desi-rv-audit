@@ -123,7 +123,7 @@ desi-rv-audit analyze \
   --strict-desi-main \
   --plots \
   --program-night-audit \
-  --program-night-permutations 200 \
+  --program-night-permutations 100 \
   --program-night-bootstraps 50 \
   --program-night-workers 4 \
   --timings-output outputs/desi_main_audit/stage_timings.csv
@@ -144,7 +144,7 @@ desi-rv-audit analyze `
   --strict-desi-main `
   --plots `
   --program-night-audit `
-  --program-night-permutations 200 `
+  --program-night-permutations 100 `
   --program-night-bootstraps 50 `
   --program-night-workers 4 `
   --timings-output outputs/desi_main_audit/stage_timings.csv
@@ -167,8 +167,8 @@ applying the diagnostic `PROGRAM:NIGHT` model. They are not interpreted as
 confirmed variable stars and are not used as evidence for the main program-night
 result.
 
-Runtime on the local machine was 1,831.86 seconds with 11.66 GiB maximum
-resident set size for the full 20-permutation audit.
+Runtime on the local machine was 10,753.05 seconds (2 h 59 min) with 10.89 GiB
+maximum resident set size for 100 permutations and 50 source bootstraps.
 
 ## Main Result
 
@@ -181,38 +181,43 @@ shuffled baselines.
 
 | Metric | Real before | Real after | Shuffled before | Shuffled after |
 |---|---:|---:|---:|---:|
-| Raw robust scatter, km/s | 3.651 | 3.157 | 3.654 | 3.496 |
-| Normalized central width | 1.019 | 0.885 | 0.936 | 0.899 |
-| Macro normalized width by program pair | 0.972 | 0.909 | 0.927 | 0.915 |
+| Raw robust scatter, km/s | 3.651 | 3.157 | 3.652 | 3.480 |
+| Normalized central width | 1.019 | 0.885 | 0.939 | 0.899 |
+| Macro normalized width by program pair | 0.973 | 0.908 | 0.930 | 0.914 |
 | `|z| > 3` | 0.051 | 0.040 | 0.043 | 0.038 |
 | `|z| > 5` | 0.022 | 0.020 | 0.018 | 0.017 |
-| Mean Gaussian pair loss | 4.358 | 4.160 | 4.052 | 3.981 |
+| Mean Gaussian pair loss | 4.358 | 4.160 | 4.062 | 3.988 |
 
-The real model reduces raw robust scatter by 0.495 km/s, or 13.5%. The coarse
-exposure-level shuffled-night controls reduce raw scatter by 0.158 km/s on
-average, or 4.3%; across 20 permutations the shuffled improvement ranges from
-0.096 to 0.234 km/s, and no shuffled permutation reaches the real improvement.
-With only 20 permutations, this is a coarse negative control rather than a
-strong formal significance claim.
+The real model reduces raw robust scatter by 0.495 km/s, or 13.5%. The
+exposure-level shuffled-night controls reduce raw scatter by 0.171 km/s on
+average, or 4.7%; across 100 permutations the shuffled improvement ranges from
+0.072 to 0.294 km/s, and no shuffled permutation reaches the real improvement.
+The corrected empirical exceedance estimate is `1 / 101 = 0.0099`; this remains
+a finite-resolution negative control, not a standalone discovery significance.
 
 The strongest program-pair improvement is `BACKUP / BACKUP`: raw robust scatter
 changes from 3.663 to 2.943 km/s and normalized central width from 1.081 to
 0.871.
 
-Independent source halves recover 484 common `PROGRAM:NIGHT` offsets with:
+Independent source halves recover 483 common `PROGRAM:NIGHT` offsets with:
 
 - offset correlation: 0.980;
-- slope B on A: 0.994;
-- median absolute difference: 0.096 km/s;
-- robust width of offset differences: 0.174 km/s.
+- slope B on A: 1.002;
+- median absolute difference: 0.107 km/s;
+- robust width of offset differences: 0.182 km/s.
+
+After demeaning within program, the correlation remains 0.977. Separate Pearson
+correlations are 0.999 for `BACKUP`, 0.955 for `BRIGHT`, and 0.884 for `DARK`.
+This confirms that the aggregate reproducibility is not only a between-program
+effect, while also showing that the result is strongest in `BACKUP`.
 
 Pair-cap sensitivity is stable:
 
 | Max pairs/source | Program-night pairs | Raw before | Raw after | Reduction | Backup/backup reduction | Offset r |
 |---:|---:|---:|---:|---:|---:|---:|
-| 10 | 1,694,555 | 3.639 | 3.137 | 13.8% | 0.724 km/s | 0.981 |
+| 10 | 1,694,555 | 3.638 | 3.137 | 13.8% | 0.723 km/s | 0.980 |
 | 20 | 1,736,682 | 3.651 | 3.157 | 13.5% | 0.720 km/s | 0.980 |
-| 50 | 1,752,357 | 3.654 | 3.160 | 13.5% | 0.720 km/s | 0.980 |
+| 50 | 1,752,357 | 3.654 | 3.160 | 13.5% | 0.719 km/s | 0.980 |
 
 ## Reproducibility Bundle
 
@@ -224,15 +229,24 @@ screening-outlier tables. The included reproducibility bundle is compact:
 - `reports/program_night_artifacts/summary.csv`
 - `reports/program_night_artifacts/by_program.csv`
 - `reports/program_night_artifacts/reproducibility.csv`
+- `reports/program_night_artifacts/reproducibility_by_program.csv`
+- `reports/program_night_artifacts/reproducibility_run_manifest.json`
 - `reports/program_night_artifacts/permutation_summary.csv`
-- `reports/program_night_artifacts/program_night_permutation_offsets.csv`
-- `reports/program_night_artifacts/program_night_permutation_exposure_map.csv`
-- `reports/program_night_artifacts/program_night_bootstrap_offsets.csv`
+- `reports/program_night_artifacts/ensemble_release_manifest.json`
 - `reports/program_night_artifacts/pair_cap_sensitivity.csv`
+- `reports/program_night_artifacts/pair_cap_sensitivity_manifest.json`
 - `reports/program_night_artifacts/correction_summary.csv`
 - `reports/program_night_artifacts/diagnostic_offsets_program_night.csv`
 - `reports/program_night_artifacts/source_fold_widths.png`
 - `reports/program_night_artifacts/run_manifest.json`
+- `reports/program_night_artifacts/stage_timings.csv`
+
+The larger fold-model ensembles are distributed as deterministic gzip assets on
+the `v0.3.0` GitHub release:
+
+- `program_night_permutation_offsets.csv.gz`
+- `program_night_permutation_exposure_map.csv.gz`
+- `program_night_bootstrap_offsets.csv.gz`
 
 ## Interpretation Boundaries
 
