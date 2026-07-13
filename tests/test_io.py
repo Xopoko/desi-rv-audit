@@ -3,6 +3,52 @@ import pytest
 from desi_rv_audit.io import load_one
 
 
+def test_strict_fits_loader_reads_row_aligned_fixture_and_large_gaia_id(tmp_path):
+    fits = pytest.importorskip("astropy.io.fits")
+    path = tmp_path / "rvpix_exp-main-backup.fits"
+    source_id = 123456789012345678
+    rvtab = fits.BinTableHDU.from_columns(
+        [
+            fits.Column(name="TARGETID", format="K", array=[1]),
+            fits.Column(name="VRAD", format="D", array=[10.0]),
+            fits.Column(name="VRAD_ERR", format="D", array=[1.0]),
+            fits.Column(name="SN_R", format="D", array=[10.0]),
+            fits.Column(name="RVS_WARN", format="K", array=[0]),
+            fits.Column(name="SUCCESS", format="L", array=[True]),
+            fits.Column(name="EXPID", format="K", array=[100]),
+            fits.Column(name="FIBER", format="K", array=[1]),
+            fits.Column(name="VSINI", format="D", array=[1.0]),
+            fits.Column(name="RR_SPECTYPE", format="4A", array=["STAR"]),
+        ],
+        name="RVTAB",
+    )
+    fibermap = fits.BinTableHDU.from_columns(
+        [
+            fits.Column(name="TARGETID", format="K", array=[1]),
+            fits.Column(name="EXPID", format="K", array=[100]),
+            fits.Column(name="FIBER", format="K", array=[1]),
+            fits.Column(name="MJD", format="D", array=[1.0]),
+            fits.Column(name="NIGHT", format="K", array=[20210101]),
+            fits.Column(name="FIBERSTATUS", format="K", array=[0]),
+            fits.Column(name="TILEID", format="K", array=[10]),
+        ],
+        name="FIBERMAP",
+    )
+    gaia = fits.BinTableHDU.from_columns(
+        [fits.Column(name="SOURCE_ID", format="K", array=[source_id])],
+        name="GAIA",
+    )
+    fits.HDUList([fits.PrimaryHDU(), rvtab, fibermap, gaia]).writeto(path)
+
+    frame = load_one(path, strict_desi_main=True)
+
+    assert len(frame) == 1
+    assert int(frame.loc[0, "SOURCE_ID"]) == source_id
+    assert int(frame.loc[0, "GROUP_ID"]) == source_id
+    assert frame.loc[0, "SURVEY"] == "MAIN"
+    assert frame.loc[0, "PROGRAM"] == "BACKUP"
+
+
 def test_strict_fits_loader_rejects_misaligned_fibermap(tmp_path):
     fits = pytest.importorskip("astropy.io.fits")
     path = tmp_path / "rvpix_exp-main-backup.fits"
