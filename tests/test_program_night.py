@@ -44,6 +44,12 @@ def test_program_night_reduces_source_grouped_holdout_scatter():
     assert not result.summary.empty
     assert not result.by_program.empty
     assert not result.offsets.empty
+    assert set(result.reproducibility["SCOPE"]) == {
+        "ALL",
+        "ALL_WITHIN_PROGRAM_DEMEANED",
+        "PROGRAM:BACKUP",
+    }
+    assert "OFFSET_SPEARMAN" in result.reproducibility.columns
     assert "N_CONNECTED_COMPONENTS" in result.summary.columns
     assert result.summary["AFTER_RAW_WIDTH_KMS"].notna().all()
     assert result.summary["AFTER_RAW_WIDTH_KMS"].mean() < result.summary[

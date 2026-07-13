@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import lsqr
+from scipy.stats import spearmanr
 
 from .hashing import stable_hash_mod, stable_seed
 
@@ -553,33 +554,53 @@ def _reproducibility(
     )
     largest_component_pair = merged["_COMPONENT_PAIR"].value_counts().idxmax()
     merged = merged[merged["_COMPONENT_PAIR"] == largest_component_pair]
-    x = merged["OFFSET_A_KMS"].to_numpy(dtype=float)
-    y = merged["OFFSET_B_KMS"].to_numpy(dtype=float)
-    valid = np.isfinite(x) & np.isfinite(y)
-    x = x[valid]
-    y = y[valid]
-    gauge_shift = float(np.median(y - x)) if x.size else np.nan
-    if x.size:
-        y = y - gauge_shift
-    if x.size < 2:
-        corr = np.nan
-        slope = np.nan
-    else:
-        corr = float(np.corrcoef(x, y)[0, 1])
-        slope = float(np.dot(x, y) / max(np.dot(x, x), 1e-12))
-    return pd.DataFrame(
-        [
-            {
-                "N_COMMON_LABELS": int(x.size),
-                "COMMON_COMPONENT_PAIR": str(largest_component_pair),
-                "GAUGE_SHIFT_B_MINUS_A_KMS": gauge_shift,
-                "OFFSET_CORRELATION": corr,
-                "OFFSET_SLOPE_B_ON_A": slope,
-                "MEDIAN_ABS_DIFF_KMS": float(np.median(np.abs(x - y))) if x.size else np.nan,
-                "ROBUST_WIDTH_DIFF_KMS": _robust_width(x - y) if x.size else np.nan,
-            }
-        ]
+    merged["PROGRAM"] = merged["LABEL"].astype("string").str.split(":", n=1).str[0]
+
+    def summarize(scope: str, subset: pd.DataFrame, demean_by_program: bool = False) -> dict:
+        x = subset["OFFSET_A_KMS"].to_numpy(dtype=float, copy=True)
+        y = subset["OFFSET_B_KMS"].to_numpy(dtype=float, copy=True)
+        programs = subset["PROGRAM"].astype(str).to_numpy()
+        valid = np.isfinite(x) & np.isfinite(y)
+        x = x[valid]
+        y = y[valid]
+        programs = programs[valid]
+        if demean_by_program:
+            for program in np.unique(programs):
+                mask = programs == program
+                x[mask] -= np.median(x[mask])
+                y[mask] -= np.median(y[mask])
+        gauge_shift = float(np.median(y - x)) if x.size else np.nan
+        if x.size:
+            y = y - gauge_shift
+        if x.size < 2:
+            corr = np.nan
+            spearman = np.nan
+            slope = np.nan
+        else:
+            corr = float(np.corrcoef(x, y)[0, 1])
+            spearman = float(spearmanr(x, y).statistic)
+            slope = float(np.dot(x, y) / max(np.dot(x, x), 1e-12))
+        return {
+            "SCOPE": scope,
+            "N_COMMON_LABELS": int(x.size),
+            "COMMON_COMPONENT_PAIR": str(largest_component_pair),
+            "GAUGE_SHIFT_B_MINUS_A_KMS": gauge_shift,
+            "OFFSET_CORRELATION": corr,
+            "OFFSET_SPEARMAN": spearman,
+            "OFFSET_SLOPE_B_ON_A": slope,
+            "MEDIAN_ABS_DIFF_KMS": float(np.median(np.abs(x - y))) if x.size else np.nan,
+            "ROBUST_WIDTH_DIFF_KMS": _robust_width(x - y) if x.size else np.nan,
+        }
+
+    records = [
+        summarize("ALL", merged),
+        summarize("ALL_WITHIN_PROGRAM_DEMEANED", merged, demean_by_program=True),
+    ]
+    records.extend(
+        summarize(f"PROGRAM:{program}", group)
+        for program, group in merged.groupby("PROGRAM", sort=True)
     )
+    return pd.DataFrame.from_records(records)
 
 
 def _run_permutation(
