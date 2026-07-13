@@ -1,0 +1,101 @@
+{
+  "backup_correction_md5": "f48a4b21b541e94d61f4372f4c555f12",
+  "cache": {
+    "path": "pair_cache.pkl",
+    "retained_after_run": false,
+    "sha256": "eebe00099301687f3f31d015e6bd87a5913a7f3f341918377b80ebc129fa4229",
+    "size": 477115958
+  },
+  "counts": {
+    "n_epochs_good": 5243675,
+    "n_epochs_raw": 7543515,
+    "n_pairs_all": 2171341,
+    "n_pairs_interday": 1736682,
+    "n_sources_interday": 837638
+  },
+  "input_fingerprint": {
+    "data/desi_corrections/backup_correction.fits": {
+      "mtime_ns": 1781911863947472900,
+      "size": 19497600
+    },
+    "data/desi_main/rvpix_exp-main-backup.fits": {
+      "mtime_ns": 1781911516994885900,
+      "size": 3400439040
+    },
+    "data/desi_main/rvpix_exp-main-bright.fits": {
+      "mtime_ns": 1781911728000154500,
+      "size": 5645370240
+    },
+    "data/desi_main/rvpix_exp-main-dark.fits": {
+      "mtime_ns": 1781911863154838800,
+      "size": 2873151360
+    }
+  },
+  "input_sha256": {
+    "data/desi_main/rvpix_exp-main-backup.fits": "8124fdf11983676eb8ed9e8a298dd9b12e74e066a1e77e9170360c0e58be8669",
+    "data/desi_main/rvpix_exp-main-bright.fits": "59f709a4695ff2e63ac6ce9cbf7fe3c1c1c63ab8269907d4963d22f27b4e6b18",
+    "data/desi_main/rvpix_exp-main-dark.fits": "5b6eeaed1f6bffb287f533cc6b171c7843d3df9cca6ab53b8415b6b43108943b"
+  },
+  "parameters": {
+    "max_pairs_per_source": 20,
+    "min_delta_days_exclusive": 1.0,
+    "min_sn_r": 5.0,
+    "strict_desi_main": true
+  },
+  "petal_validation": [
+    {
+      "INPUT_FILE": "data/desi_main/rvpix_exp-main-backup.fits",
+      "N_FIBER_PETAL_MISMATCH": 0,
+      "N_INVALID_FIBER_OR_PETAL": 0,
+      "N_ROWS": 2152133,
+      "PASS": true
+    },
+    {
+      "INPUT_FILE": "data/desi_main/rvpix_exp-main-bright.fits",
+      "N_FIBER_PETAL_MISMATCH": 0,
+      "N_INVALID_FIBER_OR_PETAL": 0,
+      "N_ROWS": 3572976,
+      "PASS": true
+    },
+    {
+      "INPUT_FILE": "data/desi_main/rvpix_exp-main-dark.fits",
+      "N_FIBER_PETAL_MISMATCH": 0,
+      "N_INVALID_FIBER_OR_PETAL": 0,
+      "N_ROWS": 1818406,
+      "PASS": true
+    }
+  ],
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.9",
+  "schema": "desi_rv_audit.discovery_pair_cache.v1",
+  "timings": [
+    {
+      "elapsed_seconds": 2.284139600000344,
+      "stage": "validate_petal"
+    },
+    {
+      "elapsed_seconds": 24.859891499996593,
+      "stage": "load_inputs"
+    },
+    {
+      "elapsed_seconds": 12.015758200002892,
+      "stage": "apply_velocity_calibration"
+    },
+    {
+      "elapsed_seconds": 2.5690447999950266,
+      "stage": "quality_mask"
+    },
+    {
+      "elapsed_seconds": 66.66830920000211,
+      "stage": "build_pair_table"
+    },
+    {
+      "elapsed_seconds": 7.7370401000007405,
+      "stage": "filter_and_write_cache"
+    },
+    {
+      "elapsed_seconds": 117.0603381999972,
+      "stage": "total"
+    }
+  ]
+}

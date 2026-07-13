@@ -1,0 +1,45 @@
+{
+  "control_max_gain_kms": -0.0047755504457406,
+  "decision": "pass",
+  "empirical_p": 0.01,
+  "n_controls": 99,
+  "parameters": {
+    "base_damp": 0.2,
+    "base_min_pairs_per_label": 200,
+    "constraint": "unweighted zero mean across supported PETAL cells within PROGRAM:NIGHT",
+    "extended_controls": 99,
+    "initial_controls": 19,
+    "n_folds": 5,
+    "petal_damp": 1.0,
+    "petal_min_pairs_per_label": 50,
+    "seed": 20260713
+  },
+  "positive_folds": 5,
+  "real_mean_incremental_gain_kms": 0.058141049057969976,
+  "replication": {
+    "COMPONENT_PAIR": "0/0",
+    "N_COMMON_LABELS": 3865,
+    "PEARSON_R": 0.8313286827891185,
+    "SPEARMAN_RHO": 0.650120593547743
+  },
+  "schema": "desi_rv_audit.program_night_petal.v1",
+  "status": "complete",
+  "worker_elapsed_seconds_sum": 19347.942502199927,
+  "worker_files": [
+    "petal_permutations_worker_000_001.csv",
+    "petal_permutations_worker_001_006.csv",
+    "petal_permutations_worker_006_011.csv",
+    "petal_permutations_worker_011_015.csv",
+    "petal_permutations_worker_015_019.csv",
+    "petal_permutations_worker_019_027.csv",
+    "petal_permutations_worker_027_035.csv",
+    "petal_permutations_worker_035_043.csv",
+    "petal_permutations_worker_043_051.csv",
+    "petal_permutations_worker_051_059.csv",
+    "petal_permutations_worker_059_067.csv",
+    "petal_permutations_worker_067_075.csv",
+    "petal_permutations_worker_075_083.csv",
+    "petal_permutations_worker_083_091.csv",
+    "petal_permutations_worker_091_099.csv"
+  ]
+}

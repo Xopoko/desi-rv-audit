@@ -1,0 +1,4 @@
+INPUT_FILE,N_ROWS,N_FIBER_PETAL_MISMATCH,N_INVALID_FIBER_OR_PETAL,PASS
+data/desi_main/rvpix_exp-main-backup.fits,2152133,0,0,True
+data/desi_main/rvpix_exp-main-bright.fits,3572976,0,0,True
+data/desi_main/rvpix_exp-main-dark.fits,1818406,0,0,True

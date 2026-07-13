@@ -1,0 +1,27 @@
+{
+  "independent_cross_program_patterns": [
+    {
+      "DIRECTION": "BRIGHT_A_DARK_B",
+      "N_PETALS": 10,
+      "PEARSON_R": 0.8578805370917132,
+      "SPEARMAN_RHO": 0.9030303030303028
+    },
+    {
+      "DIRECTION": "BRIGHT_B_DARK_A",
+      "N_PETALS": 10,
+      "PEARSON_R": 0.8247621310698579,
+      "SPEARMAN_RHO": 0.9151515151515152
+    }
+  ],
+  "program_pair_mean_gains_kms": {
+    "BACKUP / BACKUP": 0.07098674493495523,
+    "BACKUP / BRIGHT": 0.01294393650861716,
+    "BACKUP / DARK": -0.0041431415913733005,
+    "BRIGHT / BRIGHT": 0.048274253989128546,
+    "BRIGHT / DARK": 0.016999676483893823,
+    "DARK / DARK": 0.035563825312801355
+  },
+  "role": "exploratory_secondary_not_used_for_E3_decision",
+  "schema": "desi_rv_audit.petal_diagnostics.v1",
+  "status": "complete"
+}

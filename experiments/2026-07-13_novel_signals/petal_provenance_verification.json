@@ -1,0 +1,69 @@
+{
+  "comparisons": [
+    {
+      "after": "petal_cv.csv",
+      "after_sha256": "99ed84da8daff7b00e7c6560b3447115b3bccf4f9b44aa151b2ecbb47a3acf7b",
+      "before": "petal_cv.before.csv",
+      "before_sha256": "1b01edaa7c93f128e9af350428a40f75f1fe416fde7001a9d17f19422005f742",
+      "exact_non_numeric": true,
+      "ignored_columns": [
+        "ELAPSED_SECONDS"
+      ],
+      "maximum_numeric_difference": 0.0,
+      "n_rows": 5,
+      "pass": true,
+      "same_rows": true,
+      "same_schema": true
+    },
+    {
+      "after": "petal_replication.csv",
+      "after_sha256": "e68946319426d234334b167399cbf1a1cec170be06e2b8ff308b9d8316529998",
+      "before": "petal_replication.before.csv",
+      "before_sha256": "e68946319426d234334b167399cbf1a1cec170be06e2b8ff308b9d8316529998",
+      "exact_non_numeric": true,
+      "ignored_columns": [],
+      "maximum_numeric_difference": 0.0,
+      "n_rows": 1,
+      "pass": true,
+      "same_rows": true,
+      "same_schema": true
+    },
+    {
+      "after": "petal_offsets.csv",
+      "after_sha256": "ceb32afd8f4924a1ace3e62eae3121bba7b0bbb720098c8dd7ed64c546507845",
+      "before": "petal_offsets.before.csv",
+      "before_sha256": "ceb32afd8f4924a1ace3e62eae3121bba7b0bbb720098c8dd7ed64c546507845",
+      "exact_non_numeric": true,
+      "ignored_columns": [],
+      "maximum_numeric_difference": 0.0,
+      "n_rows": 35674,
+      "pass": true,
+      "same_rows": true,
+      "same_schema": true
+    },
+    {
+      "after": "petal_permutations_worker_000_001.csv",
+      "after_sha256": "fc9d0d6ef11208f7bdc0671385ca497ddfcd19c795621ace43814664e422e2b6",
+      "before": "petal_permutations_worker_000_001.before.csv",
+      "before_sha256": "53771da5f2107b07a04aee452bfcd963f069265c82bca1dff88ee074b4580328",
+      "exact_non_numeric": true,
+      "ignored_columns": [
+        "ELAPSED_SECONDS"
+      ],
+      "maximum_numeric_difference": 0.0,
+      "n_rows": 1,
+      "pass": true,
+      "same_rows": true,
+      "same_schema": true
+    }
+  ],
+  "contract": "Frozen-code exact numeric parity, excluding wall-clock timing columns.",
+  "hashes": {
+    "pair_cache.pkl": "eebe00099301687f3f31d015e6bd87a5913a7f3f341918377b80ebc129fa4229",
+    "petal_base_models.pkl": "0012e0cf807bfe7462a9515dbcefe2d1f97e8f90c35fa0bdf6cd7b883b4bf9a4",
+    "research_plan.json": "3ea45d20170d8dbc9e3fa0a731640b35dd5117838fabe30fab8c11611c39a853",
+    "run_petal.py": "50c63633a3a6fed9f90d355320059a4601a44a6d0940d99089a67260e962d9be"
+  },
+  "schema": "desi_rv_audit.petal_provenance_verification.v1",
+  "status": "pass"
+}

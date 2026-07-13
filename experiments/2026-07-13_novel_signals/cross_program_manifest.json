@@ -1,0 +1,23 @@
+{
+  "decision": "null",
+  "elapsed_seconds": 351.4344914999965,
+  "pair_graphs": "within-program only",
+  "secondary_metrics": [
+    "Spearman same-date correlation in both cross-half directions"
+  ],
+  "parameters": {
+    "block_days": 14,
+    "max_lag_days": 30,
+    "min_pairs_per_label_per_half": 200,
+    "n_bootstraps": 1000,
+    "n_null_draws": 9999,
+    "seed": 20260713
+  },
+  "primary_pair": [
+    "BRIGHT",
+    "DARK"
+  ],
+  "schema": "desi_rv_audit.cross_program_coherence.v1",
+  "source_halves": "global stable_hash_mod(GROUP_ID, 2)",
+  "source_sample": "GAIA_SOURCE_ID only"
+}

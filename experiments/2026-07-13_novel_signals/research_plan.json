@@ -1,0 +1,146 @@
+{
+  "schema": "desi_rv_audit.discovery_plan.v1",
+  "created_at": "2026-07-13T00:00:00+02:00",
+  "status": "amended_after_read_only_scouting_before_strict_primary_execution",
+  "objective": "Run three bounded discovery experiments that distinguish temporal, global-night, and focal-plane explanations for the published DESI MAIN PROGRAM:NIGHT residual signal.",
+  "scope": {
+    "dataset": "DESI DR1 public MAIN repeat-observation RV sample",
+    "input_manifest": "reports/program_night_artifacts/run_manifest.json",
+    "input_files": [
+      "data/desi_main/rvpix_exp-main-backup.fits",
+      "data/desi_main/rvpix_exp-main-bright.fits",
+      "data/desi_main/rvpix_exp-main-dark.fits"
+    ],
+    "backup_correction": "data/desi_corrections/backup_correction.fits",
+    "max_pairs_per_source": 20,
+    "quality_rules": {
+      "min_sn_r": 5.0,
+      "strict_desi_main": true,
+      "min_delta_days": 1.0
+    },
+    "resource_budget": {
+      "full_pair_table_builds": 1,
+      "full_program_night_permutations": 0,
+      "target_wall_time_minutes": 90
+    }
+  },
+  "shared_model": {
+    "source_folds": 5,
+    "fold_hash_algorithm": "blake2b-64-v1",
+    "program_night_min_pairs_per_label": 200,
+    "max_abs_z": 5.0,
+    "clip_sigma": 3.5,
+    "clip_iterations": 3,
+    "lsqr_damp": 0.2,
+    "petal_min_pairs_per_label": 50,
+    "petal_deviation_damp": 1.0,
+    "petal_constraint": "Unweighted zero mean across supported PETAL cells within each PROGRAM:NIGHT after each granular fit. The value 1.0 is frozen before the primary run; it is deliberately not tuned on the discovery outcome."
+  },
+  "experiments": [
+    {
+      "id": "E1_temporal_persistence",
+      "question": "Do diagnostic night offsets persist across nearby observing nights, consistent with multi-night calibration states rather than isolated nightly noise?",
+      "primary_data": "Five-fold diagnostic PROGRAM:NIGHT offsets, median-aggregated after within-fold and within-program gauge removal.",
+      "primary_metric": "Pearson correlation between consecutive observed-night offsets separated by 1 to 7 calendar days, reported by program and on within-program standardized pooled data.",
+      "secondary_metrics": [
+        "Spearman correlation",
+        "correlation for exactly one-day gaps",
+        "leave-one-fold-out sign stability",
+        "maximum absolute CUSUM change point with a max-over-program permutation control"
+      ],
+      "negative_control": "9999 deterministic permutations of offset values among nights within each program, preserving night sampling and the marginal offset distribution.",
+      "success_criteria": {
+        "minimum_adjacent_pairs": 20,
+        "minimum_absolute_pearson_r": 0.25,
+        "maximum_corrected_permutation_p": 0.01,
+        "minimum_leave_one_fold_out_same_sign": 4
+      },
+      "decision_rule": "Pass if the pooled within-program-standardized test meets every criterion, or if at least two individual programs meet every criterion.",
+      "failure_interpretation": "No evidence that the published night term persists beyond individual nights at the tested 1-to-7-day scale."
+    },
+    {
+      "id": "E2_cross_program_coherence",
+      "question": "Are independently fitted same-night BRIGHT and DARK offsets coherent, indicating a calendar-linked state shared across programs rather than a program-only effect?",
+      "primary_data": "Within-program-only pair graphs fitted separately, so cross-program edges cannot induce the tested correlation.",
+      "primary_metric": "Symmetric Fisher-z combination of BRIGHT_A versus DARK_B and BRIGHT_B versus DARK_A same-night Pearson correlations, plus the raw-r zero-lag excess over the median calendar-lag correlation at lags -30 through -1 and +1 through +30 days.",
+      "secondary_metrics": [
+        "Spearman correlation",
+        "source-half A and B replication",
+        "shared-night count"
+      ],
+      "negative_control": "9999 deterministic whole-night permutations of contiguous 14-day calendar blocks within the tested series; the same block mapping is used for both source halves of the shifted program. A 1000-draw 14-day block bootstrap supplies the confidence interval.",
+      "success_criteria": {
+        "primary_program_pair": "BRIGHT / DARK",
+        "minimum_shared_nights": 100,
+        "minimum_pearson_r": 0.30,
+        "minimum_each_cross_half_pearson_r": 0.15,
+        "minimum_zero_lag_excess_r": 0.10,
+        "minimum_block_bootstrap_lower_95_r": 0.10,
+        "maximum_corrected_permutation_p": 0.01,
+        "require_same_sign_in_both_cross_half_directions": true
+      },
+      "decision_rule": "Pass only if the preregistered BRIGHT / DARK pair meets every criterion. BACKUP comparisons are secondary negative-control screens and cannot make E2 pass.",
+      "failure_interpretation": "The night-associated signal is not demonstrably shared across independently fitted programs."
+    },
+    {
+      "id": "E3_program_night_petal_residual",
+      "question": "After source-disjoint PROGRAM:NIGHT correction, does a nested PROGRAM:NIGHT:PETAL zero point still transfer to held-out sources?",
+      "primary_data": "The same quality-approved inter-day pairs used by the baseline audit; PETAL is floor(FIBER / 500) for fibers 0 through 4999 after an all-row equality check against FITS PETAL_LOC.",
+      "primary_metric": "Incremental reduction in five-fold holdout raw robust width after adding train-fitted zero-mean PROGRAM:NIGHT:PETAL deviations to the PROGRAM:NIGHT model on an identical supported-row intersection.",
+      "secondary_metrics": [
+        "fold-by-fold improvement sign",
+        "source-half offset correlation",
+        "offset peak-to-peak range by program",
+        "fraction of the original PROGRAM:NIGHT gain captured by the nested term"
+      ],
+      "negative_control": "Observation-consistent PETAL shuffles within EXPID. Run 19 deterministic controls first and automatically extend to 99 only when the real gain is at least 0.02 km/s and exceeds all first-stage controls.",
+      "success_criteria": {
+        "minimum_incremental_raw_width_reduction_kms": 0.02,
+        "minimum_positive_folds": 5,
+        "maximum_corrected_permutation_p": 0.01,
+        "minimum_source_half_offset_correlation": 0.50
+      },
+      "decision_rule": "Pass only if every listed primary criterion is met; otherwise label suggestive only when the real effect exceeds all controls but misses an effect-size or replication threshold.",
+      "failure_interpretation": "No evidence for a transferable PROGRAM:NIGHT:PETAL residual of at least 0.02 km/s on the preregistered common support under the specified regularization. Smaller effects and static PROGRAM:PETAL, exposure-, tile-, or stellar-dependent structure remain untested."
+    }
+  ],
+  "reporting_rules": {
+    "multiple_testing": "Each experiment has one primary family. Program-pair subtests use Holm correction; exploratory secondary slices are labeled exploratory.",
+    "claim_levels": [
+      "pass",
+      "suggestive",
+      "null",
+      "invalid"
+    ],
+    "novelty_scope": "New within this repository and release bundle only; no claim of global literature novelty without a separate source-backed review.",
+    "required_outputs": [
+      "experiment_manifest.json",
+      "temporal_persistence.csv",
+      "cross_program_coherence.csv",
+      "petal_cv.csv",
+      "petal_offsets.csv",
+      "petal_permutations.csv",
+      "claims.jsonl",
+      "report.md"
+    ]
+  },
+  "amendments": [
+    {
+      "reason": "Read-only feasibility scouting showed that a global PROGRAM:SPECTROGRAPH term would be less diagnostic than a nested PROGRAM:NIGHT:PETAL term. The primary effect-size threshold was changed before building the pair table or running the strict model.",
+      "changes": [
+        "E1 gained a max-CUSUM secondary metric.",
+        "E3 changed from PROGRAM:SPECTROGRAPH to PROGRAM:NIGHT:PETAL.",
+        "E3 adopted a predeclared 19-to-99 sequential permutation design."
+      ]
+    },
+    {
+      "reason": "A skeptical design review identified mechanical dependence and identifiability risks before any independent program fit or PETAL model was run.",
+      "changes": [
+        "E2 froze BRIGHT / DARK as the only primary pair, raised minimum shared nights from 20 to 100, and added symmetric cross-source-half, zero-lag-excess, and 14-day block-bootstrap gates.",
+        "E2 replaced iid night-label shuffles with 9999 deterministic whole-night 14-day block controls.",
+        "E3 froze min_pairs_per_label=50, damp=1.0, and a within-PROGRAM:NIGHT zero-mean PETAL-deviation constraint before the primary run.",
+        "E3 failure language was narrowed to the tested model and effect-size floor."
+      ]
+    }
+  ]
+}

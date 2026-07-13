@@ -1,0 +1,419 @@
+{
+  "artifacts": [
+    {
+      "name": "cross_program_block_null.csv",
+      "sha256": "a6f3d5364f5b009be5a1be365ca2c23c657d0513a3ae61f50060f42c99ec72d8",
+      "size": 1805513
+    },
+    {
+      "name": "cross_program_bootstrap.csv",
+      "sha256": "dcceebf033f9c31c249c051b0c2443f25d4d82ac0fd5eb0f11ae0b4f81cdf42c",
+      "size": 169350
+    },
+    {
+      "name": "cross_program_coherence.csv",
+      "sha256": "734624d896a81691d62757f2146b6784f84a3f4c5d3b97270729ca5aef03d32d",
+      "size": 1472
+    },
+    {
+      "name": "cross_program_lags.csv",
+      "sha256": "76b78c4aaacd0bf99453d20fa31dcd95dcc888c9eecbad418a9f1bbee3d4fa55",
+      "size": 19563
+    },
+    {
+      "name": "cross_program_manifest.json",
+      "sha256": "bd37055a42c8078461907adf2f45ad8885697765986797b11ce598191febd813",
+      "size": 591
+    },
+    {
+      "name": "pair_cache_manifest.json",
+      "sha256": "6d5ef9462585f808632e1ec00c3da3be1ae087b64d253422f67a4726dd0cc89b",
+      "size": 2834
+    },
+    {
+      "name": "petal_component_sensitivity.csv",
+      "sha256": "0e3ed367afe92cdf71fe6ed69b0796d5e7247ace6d084556d88a0b5bd70741a0",
+      "size": 479
+    },
+    {
+      "name": "petal_cv.csv",
+      "sha256": "99ed84da8daff7b00e7c6560b3447115b3bccf4f9b44aa151b2ecbb47a3acf7b",
+      "size": 1023
+    },
+    {
+      "name": "petal_cv_by_program.csv",
+      "sha256": "fc4937340edb0f632ed08034432d9744bee6e8b3f489655c7707466f8819c657",
+      "size": 3692
+    },
+    {
+      "name": "petal_diagnostics_manifest.json",
+      "sha256": "8e6e57afdc760e095e0171cc370f6374806cfe581d14441896b8fdf443d612fe",
+      "size": 790
+    },
+    {
+      "name": "petal_independent_pattern.png",
+      "sha256": "85f662bf1ab5c30aae92a411d2a51e7e074f5edaa67fa828007be5a7f42788e4",
+      "size": 219440
+    },
+    {
+      "name": "petal_independent_program_offsets.csv",
+      "sha256": "0eaed3005921b619fc768f578f523cf6629d73d7766eca39739ca352704ad6c2",
+      "size": 3096
+    },
+    {
+      "name": "petal_independent_program_summary.csv",
+      "sha256": "9f47f3381bb8f2c16acb6588b65f8ba05baebae291d75b0e5d50dbbea5b23906",
+      "size": 156
+    },
+    {
+      "name": "petal_manifest.json",
+      "sha256": "49c6c33f5be4829f6859b9e93c29fe310537988d4085c5eb56d6ca77104a66ee",
+      "size": 1510
+    },
+    {
+      "name": "petal_offsets.csv",
+      "sha256": "ceb32afd8f4924a1ace3e62eae3121bba7b0bbb720098c8dd7ed64c546507845",
+      "size": 2760966
+    },
+    {
+      "name": "petal_permutations.csv",
+      "sha256": "5079a60699a93b5d234a2fef5a98ef7ad0bd3298308a9cd8cad25a55d8431f46",
+      "size": 9228
+    },
+    {
+      "name": "petal_provenance_verification.json",
+      "sha256": "4e49b0d12259a75a2244262d7d21fdb9c1788c52b78cc06df20c75bcaa3d9189",
+      "size": 2559
+    },
+    {
+      "name": "petal_replication.csv",
+      "sha256": "e68946319426d234334b167399cbf1a1cec170be06e2b8ff308b9d8316529998",
+      "size": 100
+    },
+    {
+      "name": "petal_validation.csv",
+      "sha256": "76055d2721958576989d89732a0aa88d4f98d0d076b45a00f9a77eabe2ca9eda",
+      "size": 246
+    },
+    {
+      "name": "research_plan.json",
+      "sha256": "3ea45d20170d8dbc9e3fa0a731640b35dd5117838fabe30fab8c11611c39a853",
+      "size": 8740
+    },
+    {
+      "name": "temporal_change_points.csv",
+      "sha256": "2301f05698b7a53a39bf39c54f7fd69abd24baf3e17516415498feeab0d5932d",
+      "size": 1658
+    },
+    {
+      "name": "temporal_independent_block_null.csv",
+      "sha256": "9fe7bfc0a9721b92d71eac16a1697d6cc9dd295f74adebac6ea88d5525142565",
+      "size": 956548
+    },
+    {
+      "name": "temporal_independent_halves.csv",
+      "sha256": "d8990b8c5a217b3b167a31d757244035311b3907cf1df7f6013c5c0a3b100080",
+      "size": 5013
+    },
+    {
+      "name": "temporal_independent_manifest.json",
+      "sha256": "fb46b61bb023d045afa5306ba61f8acb6fe24115b62a0fb7b9d19166c50ed296",
+      "size": 295
+    },
+    {
+      "name": "temporal_offsets.csv",
+      "sha256": "d79179bc9b7a85c364dc4d9a7753579fdd87a21eb54ea8b068b0a6265540cd0b",
+      "size": 88218
+    },
+    {
+      "name": "temporal_persistence.csv",
+      "sha256": "f9cd99e0a5f292abfc557475af2d70754a8170b992ca28dbb9a72e414bba9c04",
+      "size": 2790
+    },
+    {
+      "name": "within_program_offsets.csv",
+      "sha256": "a3389096622b8ecd8d5b990f7601cc975bc950f05b5009a57046d4e7bdb7dbf0",
+      "size": 44732
+    }
+  ],
+  "experiment_manifests": {
+    "E2": {
+      "decision": "null",
+      "elapsed_seconds": 351.4344914999965,
+      "pair_graphs": "within-program only",
+      "parameters": {
+        "block_days": 14,
+        "max_lag_days": 30,
+        "min_pairs_per_label_per_half": 200,
+        "n_bootstraps": 1000,
+        "n_null_draws": 9999,
+        "seed": 20260713
+      },
+      "primary_pair": [
+        "BRIGHT",
+        "DARK"
+      ],
+      "schema": "desi_rv_audit.cross_program_coherence.v1",
+      "secondary_metrics": [
+        "Spearman same-date correlation in both cross-half directions"
+      ],
+      "source_halves": "global stable_hash_mod(GROUP_ID, 2)",
+      "source_sample": "GAIA_SOURCE_ID only"
+    },
+    "E3": {
+      "control_max_gain_kms": -0.0047755504457406,
+      "decision": "pass",
+      "empirical_p": 0.01,
+      "n_controls": 99,
+      "parameters": {
+        "base_damp": 0.2,
+        "base_min_pairs_per_label": 200,
+        "constraint": "unweighted zero mean across supported PETAL cells within PROGRAM:NIGHT",
+        "extended_controls": 99,
+        "initial_controls": 19,
+        "n_folds": 5,
+        "petal_damp": 1.0,
+        "petal_min_pairs_per_label": 50,
+        "seed": 20260713
+      },
+      "positive_folds": 5,
+      "real_mean_incremental_gain_kms": 0.058141049057969976,
+      "replication": {
+        "COMPONENT_PAIR": "0/0",
+        "N_COMMON_LABELS": 3865,
+        "PEARSON_R": 0.8313286827891185,
+        "SPEARMAN_RHO": 0.650120593547743
+      },
+      "schema": "desi_rv_audit.program_night_petal.v1",
+      "status": "complete",
+      "worker_elapsed_seconds_sum": 19347.942502199927,
+      "worker_files": [
+        "petal_permutations_worker_000_001.csv",
+        "petal_permutations_worker_001_006.csv",
+        "petal_permutations_worker_006_011.csv",
+        "petal_permutations_worker_011_015.csv",
+        "petal_permutations_worker_015_019.csv",
+        "petal_permutations_worker_019_027.csv",
+        "petal_permutations_worker_027_035.csv",
+        "petal_permutations_worker_035_043.csv",
+        "petal_permutations_worker_043_051.csv",
+        "petal_permutations_worker_051_059.csv",
+        "petal_permutations_worker_059_067.csv",
+        "petal_permutations_worker_067_075.csv",
+        "petal_permutations_worker_075_083.csv",
+        "petal_permutations_worker_083_091.csv",
+        "petal_permutations_worker_091_099.csv"
+      ]
+    }
+  },
+  "git": {
+    "branch": "main",
+    "head": "fcc7e2e3e83df4ff851050d81bd3d9b2e715312b",
+    "status_porcelain": "?? experiments/"
+  },
+  "novelty_scope": "New within this repository and release bundle only; literature novelty not assessed.",
+  "pair_cache": {
+    "backup_correction_md5": "f48a4b21b541e94d61f4372f4c555f12",
+    "cache": {
+      "path": "pair_cache.pkl",
+      "retained_after_run": false,
+      "sha256": "eebe00099301687f3f31d015e6bd87a5913a7f3f341918377b80ebc129fa4229",
+      "size": 477115958
+    },
+    "counts": {
+      "n_epochs_good": 5243675,
+      "n_epochs_raw": 7543515,
+      "n_pairs_all": 2171341,
+      "n_pairs_interday": 1736682,
+      "n_sources_interday": 837638
+    },
+    "input_fingerprint": {
+      "data/desi_corrections/backup_correction.fits": {
+        "mtime_ns": 1781911863947472900,
+        "size": 19497600
+      },
+      "data/desi_main/rvpix_exp-main-backup.fits": {
+        "mtime_ns": 1781911516994885900,
+        "size": 3400439040
+      },
+      "data/desi_main/rvpix_exp-main-bright.fits": {
+        "mtime_ns": 1781911728000154500,
+        "size": 5645370240
+      },
+      "data/desi_main/rvpix_exp-main-dark.fits": {
+        "mtime_ns": 1781911863154838800,
+        "size": 2873151360
+      }
+    },
+    "input_sha256": {
+      "data/desi_main/rvpix_exp-main-backup.fits": "8124fdf11983676eb8ed9e8a298dd9b12e74e066a1e77e9170360c0e58be8669",
+      "data/desi_main/rvpix_exp-main-bright.fits": "59f709a4695ff2e63ac6ce9cbf7fe3c1c1c63ab8269907d4963d22f27b4e6b18",
+      "data/desi_main/rvpix_exp-main-dark.fits": "5b6eeaed1f6bffb287f533cc6b171c7843d3df9cca6ab53b8415b6b43108943b"
+    },
+    "parameters": {
+      "max_pairs_per_source": 20,
+      "min_delta_days_exclusive": 1.0,
+      "min_sn_r": 5.0,
+      "strict_desi_main": true
+    },
+    "petal_validation": [
+      {
+        "INPUT_FILE": "data/desi_main/rvpix_exp-main-backup.fits",
+        "N_FIBER_PETAL_MISMATCH": 0,
+        "N_INVALID_FIBER_OR_PETAL": 0,
+        "N_ROWS": 2152133,
+        "PASS": true
+      },
+      {
+        "INPUT_FILE": "data/desi_main/rvpix_exp-main-bright.fits",
+        "N_FIBER_PETAL_MISMATCH": 0,
+        "N_INVALID_FIBER_OR_PETAL": 0,
+        "N_ROWS": 3572976,
+        "PASS": true
+      },
+      {
+        "INPUT_FILE": "data/desi_main/rvpix_exp-main-dark.fits",
+        "N_FIBER_PETAL_MISMATCH": 0,
+        "N_INVALID_FIBER_OR_PETAL": 0,
+        "N_ROWS": 1818406,
+        "PASS": true
+      }
+    ],
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "schema": "desi_rv_audit.discovery_pair_cache.v1",
+    "timings": [
+      {
+        "elapsed_seconds": 2.284139600000344,
+        "stage": "validate_petal"
+      },
+      {
+        "elapsed_seconds": 24.859891499996593,
+        "stage": "load_inputs"
+      },
+      {
+        "elapsed_seconds": 12.015758200002892,
+        "stage": "apply_velocity_calibration"
+      },
+      {
+        "elapsed_seconds": 2.5690447999950266,
+        "stage": "quality_mask"
+      },
+      {
+        "elapsed_seconds": 66.66830920000211,
+        "stage": "build_pair_table"
+      },
+      {
+        "elapsed_seconds": 7.7370401000007405,
+        "stage": "filter_and_write_cache"
+      },
+      {
+        "elapsed_seconds": 117.0603381999972,
+        "stage": "total"
+      }
+    ]
+  },
+  "publication_outputs": [
+    {
+      "name": "claims.jsonl",
+      "sha256": "70f423b288fd66e8c7a096828c08b52a35e3f3b1efb4a938c34b7b7ded6fce5d",
+      "size": 3440
+    },
+    {
+      "name": "report.md",
+      "sha256": "1697dabd181f1d8d36cfc14533305244968d6ca317b32049ab292ae2fab898b4",
+      "size": 7487
+    }
+  ],
+  "qa": {
+    "experimental_checks": [
+      "all experiment scripts compile with py_compile",
+      "discovery_stats.py self-tests pass",
+      "verify_bundle.py validates decisions, controls, hashes when retained, and LF-only text artifacts"
+    ],
+    "known_platform_failure": "tests/test_manifest.py::test_manifest_records_output_hashes expects LF byte count from pathlib.Path.write_text on Windows, which emits CRLF",
+    "project_pytest_command": ".venv/Scripts/python.exe -m pytest -q",
+    "project_pytest_failed": 1,
+    "project_pytest_passed": 37
+  },
+  "research_plan_sha256": "3ea45d20170d8dbc9e3fa0a731640b35dd5117838fabe30fab8c11611c39a853",
+  "runtime": {
+    "packages": {
+      "astropy": "6.1.7",
+      "numpy": "2.2.6",
+      "pandas": "2.3.3",
+      "scipy": "1.15.3"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9"
+  },
+  "schema": "desi_rv_audit.discovery_experiments.v1",
+  "scripts": [
+    {
+      "name": "build_pair_cache.py",
+      "sha256": "2fde05638b812709dd274b1a171034c67934e1fe0e4b0e0cb56f5ea8b631aa17",
+      "size": 8746
+    },
+    {
+      "name": "run_temporal.py",
+      "sha256": "e01a9dfeb1459233a86e2f4eae133bfe1f98d2f585956fbc6543c1f8908c16db",
+      "size": 30218
+    },
+    {
+      "name": "discovery_stats.py",
+      "sha256": "2fa3772f469c0b934a815341ba72170fd0b67d8fa16052b7642a9f875aa61aef",
+      "size": 27554
+    },
+    {
+      "name": "run_cross_program.py",
+      "sha256": "a67923e22778322d7d4f31385068af16fd4c0f6d85d90a10daa15ed90643eeff",
+      "size": 15795
+    },
+    {
+      "name": "run_petal.py",
+      "sha256": "50c63633a3a6fed9f90d355320059a4601a44a6d0940d99089a67260e962d9be",
+      "size": 24933
+    },
+    {
+      "name": "run_petal_diagnostics.py",
+      "sha256": "855ff6733521ce8ce7af0e27007744e3ee418a73122371949a3feb1fe3b2ee6d",
+      "size": 8298
+    },
+    {
+      "name": "run_petal_component_sensitivity.py",
+      "sha256": "c8f11a0601bfd7b6398c3916c67a028fe991f5bc5f450efa3cbd18f3c2ec1ea4",
+      "size": 3063
+    },
+    {
+      "name": "plot_petal_pattern.py",
+      "sha256": "a36bdcbbd0e9b0b834ec44b8da549cdd7411ca6032612a2ae17596ada2c1939e",
+      "size": 1542
+    },
+    {
+      "name": "run_temporal_independent.py",
+      "sha256": "2123c338e95982397e6512717830c7d206ccd9285542675fc4af7e9314247ac8",
+      "size": 7905
+    },
+    {
+      "name": "verify_petal_provenance.py",
+      "sha256": "fd8ab5d44f4b67e2ce2e1984801b837063670ee2dc4fc367c72ff3add85cac72",
+      "size": 4198
+    },
+    {
+      "name": "run_all.py",
+      "sha256": "3e430eeed3c4705dd03a27b38e02af2b329a612f8130abd5f37d774813ed6eb3",
+      "size": 4771
+    },
+    {
+      "name": "verify_bundle.py",
+      "sha256": "c2302dc6a9afe048b5ba8e3136d27d962306cbaeee4b11e7cc3e8a82604a8395",
+      "size": 8102
+    },
+    {
+      "name": "finalize_experiments.py",
+      "sha256": "f8146dc4c5e1846b66577639bad9f02eb2fb5738591944b8a0828eb0ef3d4515",
+      "size": 24786
+    }
+  ],
+  "status": "complete"
+}

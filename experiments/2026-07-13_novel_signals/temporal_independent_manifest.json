@@ -1,0 +1,12 @@
+{
+  "parameters": {
+    "block_days": 14,
+    "max_lag_days": 7,
+    "n_bootstrap": 1000,
+    "n_null": 9999,
+    "seed": 20260713
+  },
+  "role": "post_preregistered_robustness_check_not_used_for_E1_decision",
+  "schema": "desi_rv_audit.temporal_independent_halves.v1",
+  "status": "complete"
+}

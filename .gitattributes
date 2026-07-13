@@ -1,0 +1,8 @@
+/.gitattributes text eol=lf
+experiments/2026-07-13_novel_signals/*.py text eol=lf
+experiments/2026-07-13_novel_signals/*.json text eol=lf
+experiments/2026-07-13_novel_signals/*.jsonl text eol=lf
+experiments/2026-07-13_novel_signals/*.csv text eol=lf
+experiments/2026-07-13_novel_signals/*.md text eol=lf
+experiments/2026-07-13_novel_signals/*.png binary
+experiments/2026-07-13_novel_signals/*.gz binary
