@@ -49,6 +49,40 @@ class AuditOutputs:
     run_manifest: dict[str, object]
 
 
+COMMON_OUTPUT_NAMES = [
+    "epoch_quality_by_program.csv",
+    "calibration_overall.csv",
+    "calibration_formal_overall.csv",
+    "calibration_by_program.csv",
+    "calibration_formal_by_program.csv",
+    "calibration_interday_by_program.csv",
+    "calibration_formal_interday_by_program.csv",
+    "calibration_by_sn.csv",
+    "rejection_counts.csv",
+    "correction_summary.csv",
+    "program_night_summary.csv",
+    "program_night_by_program.csv",
+    "diagnostic_offsets_program_night.csv",
+    "program_night_reproducibility.csv",
+    "program_night_permutation_summary.csv",
+    "program_night_permutation_offsets.csv",
+    "program_night_permutation_exposure_map.csv",
+    "program_night_bootstrap_offsets.csv",
+]
+
+
+def expected_output_names(write_heavy_outputs: bool) -> list[str]:
+    if write_heavy_outputs:
+        mode_names = ["source_summary.csv", "pairs.csv"]
+    else:
+        mode_names = [
+            "source_classification_counts.csv",
+            "candidate_sources.csv",
+            "candidate_sources_strict.csv",
+        ]
+    return [*mode_names, *COMMON_OUTPUT_NAMES]
+
+
 def _record_timing(
     records: list[dict[str, object]] | None,
     stage: str,
@@ -340,7 +374,11 @@ def save_outputs(
     )
     write_manifest(
         output_dir / "run_manifest.json",
-        add_output_files(outputs.run_manifest, output_dir),
+        add_output_files(
+            outputs.run_manifest,
+            output_dir,
+            file_names=expected_output_names(write_heavy_outputs),
+        ),
     )
 
 
@@ -438,6 +476,17 @@ def load_and_run(
         pd.DataFrame(timing_records).to_csv(timings_path, index=False)
         write_manifest(
             Path(output_dir) / "run_manifest.json",
-            add_output_files(outputs.run_manifest, output_dir),
+            add_output_files(
+                outputs.run_manifest,
+                output_dir,
+                file_names=[
+                    *expected_output_names(write_heavy_outputs),
+                    *(
+                        [timings_path.name]
+                        if timings_path.parent.resolve() == Path(output_dir).resolve()
+                        else []
+                    ),
+                ],
+            ),
         )
     return outputs

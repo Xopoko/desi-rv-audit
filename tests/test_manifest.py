@@ -67,3 +67,16 @@ def test_manifest_records_output_hashes(tmp_path):
             "sha256": "daff832f802000e645771a60983c76c963f6ee602a6230e45237bd360e91cc1a",
         }
     ]
+
+
+def test_manifest_explicit_output_allowlist_excludes_stale_files(tmp_path):
+    (tmp_path / "current.csv").write_text("x\n1\n", encoding="utf-8")
+    (tmp_path / "stale.csv").write_text("old\n", encoding="utf-8")
+
+    result = add_output_files(
+        {"git_commit": "abc"},
+        tmp_path,
+        file_names=["current.csv"],
+    )
+
+    assert [record["name"] for record in result["output_files"]] == ["current.csv"]

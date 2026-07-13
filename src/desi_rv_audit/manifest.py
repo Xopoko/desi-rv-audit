@@ -104,11 +104,17 @@ def build_manifest(
 def add_output_files(
     manifest: dict[str, object],
     output_dir: str | Path,
+    file_names: Iterable[str] | None = None,
 ) -> dict[str, object]:
     result = dict(manifest)
     root = Path(output_dir)
     records = []
-    for path in sorted(root.iterdir()):
+    paths = (
+        [root / name for name in file_names]
+        if file_names is not None
+        else sorted(root.iterdir())
+    )
+    for path in sorted(paths):
         if not path.is_file() or path.name == "run_manifest.json":
             continue
         records.append(

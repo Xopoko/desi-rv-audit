@@ -4,7 +4,8 @@ import argparse
 from pathlib import Path
 
 from .downloads import download_main_bundle
-from .pipeline import load_and_run
+from .manifest import add_output_files, write_manifest
+from .pipeline import expected_output_names, load_and_run
 from .plots import write_plots
 from .report import build_report, write_report
 
@@ -164,8 +165,23 @@ def main() -> None:
             report_path = Path(args.report_output)
             report_path.parent.mkdir(parents=True, exist_ok=True)
             report_path.write_text(report_text, encoding="utf-8")
-        if args.plots:
-            write_plots(outputs, args.output_dir)
+        plot_paths = write_plots(outputs, args.output_dir) if args.plots else []
+        manifest_names = [
+            *expected_output_names(not args.lite_output),
+            *(path.name for path in plot_paths),
+        ]
+        if args.timings_output:
+            timings_path = Path(args.timings_output)
+            if timings_path.parent.resolve() == Path(args.output_dir).resolve():
+                manifest_names.append(timings_path.name)
+        write_manifest(
+            Path(args.output_dir) / "run_manifest.json",
+            add_output_files(
+                outputs.run_manifest,
+                args.output_dir,
+                file_names=manifest_names,
+            ),
+        )
         candidates = int((outputs.source_summary["classification"] == "candidate_variable").sum())
         output_mode = "lite outputs" if args.lite_output else "full outputs"
         print(
