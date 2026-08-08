@@ -1,4 +1,5 @@
 /.gitattributes text eol=lf
+requirements-lock.txt text eol=lf
 experiments/2026-07-13_novel_signals/*.py text eol=lf
 experiments/2026-07-13_novel_signals/*.json text eol=lf
 experiments/2026-07-13_novel_signals/*.jsonl text eol=lf
