@@ -1,0 +1,42 @@
+{
+  "schema": "desi_rv_audit.explanation_research_contract.v1",
+  "as_of": "2026-08-08",
+  "mode": "bounded_source_synthesis",
+  "topic": "A scientific explanation of the DESI DR1 stellar radial-velocity audit",
+  "questions": [
+    "What does DESI measure and which part of DESI does this repository use?",
+    "How does a spectrum become a single-epoch stellar radial velocity?",
+    "Why do repeat observations reveal calibration residuals?",
+    "What do the baseline audit and experiments E1, E2, and E3 establish?",
+    "How are dark matter and dark energy related to this data but outside this audit's direct claims?"
+  ],
+  "inclusion": [
+    "Official DESI data and instrument documentation",
+    "Primary DESI collaboration or Milky Way Survey papers",
+    "Stable DOI, arXiv, or Zenodo records",
+    "A scholarly review for broad dark-matter inference context",
+    "Committed repository reports, claims, manifests, and compact artifacts"
+  ],
+  "exclusion": [
+    "Press coverage as evidence for scientific claims",
+    "Speculative physical explanations for audit residuals",
+    "Uncommitted local outputs as required evidence",
+    "A comprehensive literature-novelty claim"
+  ],
+  "source_budget": 12,
+  "outputs": [
+    "Layered Markdown guide",
+    "Machine-readable source and claim ledgers",
+    "Two executed notebooks",
+    "Agent maintenance guidance",
+    "Automated coverage and integrity validation"
+  ],
+  "quality_gates": [
+    "Every required claim has a source or committed evidence path",
+    "Every claim states at least one limitation",
+    "Every required concept is covered by at least one chapter",
+    "Every notebook executes without error and records current input hashes",
+    "All internal links resolve",
+    "The dark-matter and dark-energy direct-measurement boundaries are explicit"
+  ]
+}

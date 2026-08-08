@@ -14,6 +14,10 @@ with the compressed permutation/bootstrap release assets, are
 transformed/derived artifacts from public DESI DR1 data and should be treated as
 DESI-derived data products under those DESI terms.
 
+The executed notebooks under `explanation/notebooks/` visualize and summarize
+those same derived artifacts. Their saved tables and plots should therefore be
+treated as DESI-derived outputs under the same terms.
+
 This audit uses and transforms:
 
 - DESI DR1 stellar catalogue single-epoch radial-velocity files.

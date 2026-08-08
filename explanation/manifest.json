@@ -1,0 +1,57 @@
+{
+  "schema": "desi_rv_audit.explanation_manifest.v1",
+  "entrypoint": "explanation/README.md",
+  "documents": [
+    {"id": "start", "path": "explanation/README.md", "level": 0},
+    {"id": "big-picture", "path": "explanation/01_big_picture.md", "level": 1},
+    {"id": "light-to-velocity", "path": "explanation/02_light_to_velocity.md", "level": 1},
+    {"id": "why-audit", "path": "explanation/03_why_audit.md", "level": 2},
+    {"id": "evidence-logic", "path": "explanation/04_how_evidence_works.md", "level": 3},
+    {"id": "findings", "path": "explanation/05_what_we_found.md", "level": 3},
+    {"id": "dark-universe", "path": "explanation/06_dark_matter_and_dark_energy.md", "level": 2},
+    {"id": "evidence-map", "path": "explanation/07_evidence_map.md", "level": 4},
+    {"id": "reader-test", "path": "explanation/08_reader_test.md", "level": 4},
+    {"id": "glossary", "path": "explanation/GLOSSARY.md", "level": 4},
+    {"id": "sources", "path": "explanation/SOURCES.md", "level": 4}
+  ],
+  "notebooks": [
+    {
+      "id": "baseline-evidence",
+      "path": "explanation/notebooks/01_baseline_evidence.ipynb",
+      "generator": "explanation/tools/build_notebooks.py",
+      "claims": ["BASELINE-NIGHT", "BASELINE-REPLICATION"]
+    },
+    {
+      "id": "discovery-evidence",
+      "path": "explanation/notebooks/02_discovery_evidence.ipynb",
+      "generator": "explanation/tools/build_notebooks.py",
+      "claims": ["E1-TEMPORAL", "E2-COHERENCE-NULL", "E3-PETAL"]
+    }
+  ],
+  "required_concepts": [
+    "desi", "spectrum", "doppler-shift", "radial-velocity", "epoch",
+    "repeat-observation", "source-identity", "program", "observing-night",
+    "petal", "quality-cut", "velocity-correction", "uncertainty-floor",
+    "residual", "robust-width", "source-disjoint", "permutation-control",
+    "bootstrap", "empirical-p-value", "correlation", "pass-null",
+    "exploratory-analysis", "dark-matter", "dark-energy", "bao",
+    "redshift", "quasar", "lyman-alpha-forest"
+  ],
+  "required_claims": [
+    "SCOPE-STELLAR", "SCOPE-DARK-ENERGY", "SCOPE-DARK-MATTER",
+    "MEASUREMENT-RV", "INSTRUMENT-PETAL", "BASELINE-NIGHT",
+    "BASELINE-REPLICATION", "E1-TEMPORAL", "E2-COHERENCE-NULL",
+    "E3-PETAL", "BOUNDARY-OUTLIERS", "BOUNDARY-EXPLORATORY"
+  ],
+  "ledgers": {
+    "claims": "explanation/claims.jsonl",
+    "sources": "explanation/sources.json",
+    "research_contract": "explanation/research_contract.json"
+  },
+  "maintenance": {
+    "agent_guidance": "explanation/AGENTS.md",
+    "authoring_guide": "explanation/AUTHORING.md",
+    "validator": "explanation/tools/validate_explanation.py",
+    "notebook_builder": "explanation/tools/build_notebooks.py"
+  }
+}

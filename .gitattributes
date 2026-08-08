@@ -6,3 +6,10 @@ experiments/2026-07-13_novel_signals/*.csv text eol=lf
 experiments/2026-07-13_novel_signals/*.md text eol=lf
 experiments/2026-07-13_novel_signals/*.png binary
 experiments/2026-07-13_novel_signals/*.gz binary
+reports/program_night_artifacts/*.csv text eol=lf
+explanation/*.md text eol=lf
+explanation/*.json text eol=lf
+explanation/*.jsonl text eol=lf
+explanation/**/*.md text eol=lf
+explanation/**/*.py text eol=lf
+explanation/**/*.ipynb text eol=lf

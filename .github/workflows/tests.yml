@@ -21,6 +21,13 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[fits,dev]"
+          python -m pip install -e ".[fits,dev,explain]"
+      - name: Verify explanation layer
+        run: |
+          python explanation/tools/build_notebooks.py --check
+          python explanation/tools/validate_explanation.py
+      - name: Re-execute explanation notebooks
+        if: matrix.python-version == '3.11'
+        run: python explanation/tools/build_notebooks.py --execute-check
       - name: Test
         run: pytest

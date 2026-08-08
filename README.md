@@ -15,6 +15,14 @@ quantifies the out-of-sample night-associated residual component that remains in
 the public MAIN repeat-observation sample after the published approximate
 backup-program correction and program-level uncertainty floors.
 
+## Scientific Explanation
+
+The [scientific guide](explanation/README.md) separates the DESI dark-energy
+mission from the Milky Way stellar catalogue used here, explains radial
+velocity and repeated observations, traces every supported claim to committed
+evidence, and includes two lightweight executed notebooks that do not require
+the multi-gigabyte FITS inputs.
+
 ## Research Question
 
 Are DESI single-epoch radial velocities and their uncertainties calibrated
