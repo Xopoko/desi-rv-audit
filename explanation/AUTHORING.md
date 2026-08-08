@@ -1,6 +1,6 @@
 # Maintaining The Explanation Layer
 
-Start: [Explanation home](README.md) -> **Authoring workflow**
+Run all commands below from the repository root.
 
 This file is the long-form procedure for an agent or contributor. The scoped
 rules that load automatically live in [AGENTS.md](AGENTS.md).
@@ -97,7 +97,7 @@ what the quantity means.
 - Regenerate with:
 
 ```bash
-python -m pip install -e ".[explain]"
+python -m pip install -e ".[explain]" --constraint requirements-lock.txt
 python explanation/tools/build_notebooks.py
 ```
 

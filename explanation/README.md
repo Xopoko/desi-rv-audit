@@ -128,13 +128,6 @@ checks:
 - [Baseline evidence: real nights versus shuffled controls](notebooks/01_baseline_evidence.ipynb)
 - [Discovery evidence: E1, E2, and E3](notebooks/02_discovery_evidence.ipynb)
 
-To regenerate them from the repository root:
-
-```bash
-python -m pip install -e ".[explain]"
-python explanation/tools/build_notebooks.py
-```
-
 No raw DESI FITS download is needed for these two notebooks.
 
 ## Critical boundaries

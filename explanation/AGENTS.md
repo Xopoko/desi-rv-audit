@@ -53,6 +53,7 @@ python explanation/tools/build_notebooks.py --check
 pytest
 ```
 
-For notebook regeneration or execution, install `.[explain]` first. A change is
-not complete if validation fails, a notebook contains an error output, a claim
-lacks a limitation, or a linked evidence path is missing.
+For notebook regeneration or execution, follow the pinned procedure in
+[AUTHORING.md](AUTHORING.md#notebook-policy). A change is not complete if
+validation fails, a notebook contains an error output, a claim lacks a
+limitation, or a linked evidence path is missing.

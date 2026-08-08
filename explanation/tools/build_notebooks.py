@@ -9,13 +9,14 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+from copy import deepcopy
 import hashlib
 import json
 import sys
 import zlib
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from textwrap import dedent
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Iterator, Sequence
 
 import nbformat
 from nbclient import NotebookClient
@@ -64,6 +65,15 @@ EXPLANATION_METADATA_KEYS = {
     "claims",
     "executed",
 }
+
+_MAX_PNG_FILE_BYTES = 16 * 1024 * 1024
+_MAX_PNG_BASE64_CHARS = ((_MAX_PNG_FILE_BYTES + 2) // 3) * 4
+_MAX_PNG_BASE64_PARTS = 4_096
+_MAX_PNG_IDAT_BYTES = 16 * 1024 * 1024
+_MAX_PNG_DIMENSION = 8_192
+_MAX_PNG_PIXEL_BYTES = 64 * 1024 * 1024
+_MAX_PNG_PIXELS = _MAX_PNG_PIXEL_BYTES // 4
+_MAX_PNG_CHUNKS = 4_096
 
 
 class NotebookBuildError(RuntimeError):
@@ -1106,18 +1116,127 @@ def check_notebooks() -> list[str]:
     return errors
 
 
+def _paeth_predictor(left: int, above: int, upper_left: int) -> int:
+    estimate = left + above - upper_left
+    left_distance = abs(estimate - left)
+    above_distance = abs(estimate - above)
+    upper_left_distance = abs(estimate - upper_left)
+    if left_distance <= above_distance and left_distance <= upper_left_distance:
+        return left
+    if above_distance <= upper_left_distance:
+        return above
+    return upper_left
+
+
+def _bounded_png_decompress(
+    compressed: bytes, expected_size: int, context: str
+) -> bytes:
+    decompressor = zlib.decompressobj()
+    try:
+        decoded = decompressor.decompress(compressed, expected_size + 1)
+    except zlib.error as exc:
+        raise NotebookBuildError(
+            f"{context}: image/png scanlines cannot be decompressed"
+        ) from exc
+
+    if len(decoded) > expected_size or decompressor.unconsumed_tail:
+        raise NotebookBuildError(
+            f"{context}: image/png decompressed data exceeds its declared geometry"
+        )
+    if not decompressor.eof:
+        raise NotebookBuildError(
+            f"{context}: image/png compressed stream is truncated or oversized"
+        )
+    if decompressor.unused_data:
+        raise NotebookBuildError(
+            f"{context}: image/png compressed stream has trailing data"
+        )
+    if len(decoded) != expected_size:
+        raise NotebookBuildError(
+            f"{context}: image/png decompressed size does not match its geometry"
+        )
+    return decoded
+
+
+def _iter_unfiltered_png_rows(
+    scanlines: bytes,
+    *,
+    height: int,
+    row_bytes: int,
+    filter_bytes_per_pixel: int,
+    context: str,
+) -> Iterator[bytes]:
+    """Yield non-interlaced PNG rows after reversing their scanline filters."""
+    previous = bytearray(row_bytes)
+    position = 0
+    for row_index in range(height):
+        filter_type = scanlines[position]
+        position += 1
+        encoded = scanlines[position : position + row_bytes]
+        position += row_bytes
+        reconstructed = bytearray(row_bytes)
+
+        for index, value in enumerate(encoded):
+            left = (
+                reconstructed[index - filter_bytes_per_pixel]
+                if index >= filter_bytes_per_pixel
+                else 0
+            )
+            above = previous[index]
+            upper_left = (
+                previous[index - filter_bytes_per_pixel]
+                if index >= filter_bytes_per_pixel
+                else 0
+            )
+            if filter_type == 0:
+                predictor = 0
+            elif filter_type == 1:
+                predictor = left
+            elif filter_type == 2:
+                predictor = above
+            elif filter_type == 3:
+                predictor = (left + above) // 2
+            elif filter_type == 4:
+                predictor = _paeth_predictor(left, above, upper_left)
+            else:
+                raise NotebookBuildError(
+                    f"{context}: image/png row {row_index + 1} uses invalid "
+                    f"filter type {filter_type}"
+                )
+            reconstructed[index] = (value + predictor) & 0xFF
+
+        yield bytes(reconstructed)
+        previous = reconstructed
+
+
 def _png_fingerprint(payload: Any, context: str) -> dict[str, Any]:
-    """Fingerprint decoded PNG raster data while ignoring text metadata."""
-    if isinstance(payload, list) and all(isinstance(part, str) for part in payload):
+    """Fingerprint unfiltered RGBA8 PNG pixel bytes, ignoring text metadata."""
+    if isinstance(payload, list):
+        if not all(isinstance(part, str) for part in payload):
+            raise NotebookBuildError(
+                f"{context}: image/png payload must be base64 text"
+            )
+        if len(payload) > _MAX_PNG_BASE64_PARTS:
+            raise NotebookBuildError(
+                f"{context}: image/png payload has too many base64 parts"
+            )
+        payload_length = sum(len(part) for part in payload)
+        if payload_length > _MAX_PNG_BASE64_CHARS:
+            raise NotebookBuildError(f"{context}: image/png payload is too large")
         payload = "".join(payload)
     if not isinstance(payload, str):
         raise NotebookBuildError(f"{context}: image/png payload must be base64 text")
+    if len(payload) > _MAX_PNG_BASE64_CHARS:
+        raise NotebookBuildError(f"{context}: image/png payload is too large")
     try:
         raw = base64.b64decode(payload.encode("ascii"), validate=True)
     except (UnicodeEncodeError, ValueError, binascii.Error) as exc:
         raise NotebookBuildError(
             f"{context}: image/png payload is not valid base64"
         ) from exc
+    if len(raw) > _MAX_PNG_FILE_BYTES:
+        raise NotebookBuildError(f"{context}: image/png file is too large")
+
     signature = b"\x89PNG\r\n\x1a\n"
     if not raw.startswith(signature):
         raise NotebookBuildError(f"{context}: image/png payload has no PNG signature")
@@ -1125,13 +1244,20 @@ def _png_fingerprint(payload: Any, context: str) -> dict[str, Any]:
     position = len(signature)
     width: int | None = None
     height: int | None = None
+    row_bytes: int | None = None
+    filter_bytes_per_pixel: int | None = None
+    expected_scanline_bytes: int | None = None
     idat = bytearray()
     semantic_chunks = bytearray()
+    saw_idat = False
+    idat_sequence_closed = False
     saw_iend = False
     chunk_index = 0
     ignored_metadata = {b"tEXt", b"zTXt", b"iTXt", b"tIME", b"eXIf"}
 
     while position < len(raw):
+        if chunk_index >= _MAX_PNG_CHUNKS:
+            raise NotebookBuildError(f"{context}: image/png contains too many chunks")
         if position + 12 > len(raw):
             raise NotebookBuildError(f"{context}: image/png contains a truncated chunk")
         length = int.from_bytes(raw[position : position + 4], "big")
@@ -1143,7 +1269,8 @@ def _png_fingerprint(payload: Any, context: str) -> dict[str, Any]:
             raise NotebookBuildError(f"{context}: image/png contains a truncated chunk")
         chunk_data = raw[data_start:data_end]
         stored_crc = int.from_bytes(raw[data_end:chunk_end], "big")
-        actual_crc = zlib.crc32(chunk_type + chunk_data) & 0xFFFFFFFF
+        actual_crc = zlib.crc32(chunk_type)
+        actual_crc = zlib.crc32(chunk_data, actual_crc) & 0xFFFFFFFF
         if stored_crc != actual_crc:
             raise NotebookBuildError(f"{context}: image/png chunk CRC is invalid")
         position = chunk_end
@@ -1153,16 +1280,57 @@ def _png_fingerprint(payload: Any, context: str) -> dict[str, Any]:
                 raise NotebookBuildError(f"{context}: image/png has an invalid IHDR")
             width = int.from_bytes(chunk_data[:4], "big")
             height = int.from_bytes(chunk_data[4:8], "big")
+            bit_depth, color_type, compression, filter_method, interlace = chunk_data[8:]
             if width < 1 or height < 1:
                 raise NotebookBuildError(
                     f"{context}: image/png dimensions must be positive"
                 )
+            if width > _MAX_PNG_DIMENSION or height > _MAX_PNG_DIMENSION:
+                raise NotebookBuildError(
+                    f"{context}: image/png dimensions exceed the safety limit"
+                )
+            if width * height > _MAX_PNG_PIXELS:
+                raise NotebookBuildError(
+                    f"{context}: image/png pixel count exceeds the safety limit"
+                )
+            if bit_depth != 8 or color_type != 6:
+                raise NotebookBuildError(
+                    f"{context}: image/png output must use 8-bit RGBA color"
+                )
+            if compression != 0 or filter_method != 0:
+                raise NotebookBuildError(
+                    f"{context}: image/png uses an unsupported compression or filter method"
+                )
+            if interlace != 0:
+                raise NotebookBuildError(
+                    f"{context}: interlaced image/png output is not supported"
+                )
+
+            row_bytes = width * 4
+            filter_bytes_per_pixel = 4
+            expected_scanline_bytes = height * (row_bytes + 1)
+            if row_bytes * height > _MAX_PNG_PIXEL_BYTES:
+                raise NotebookBuildError(
+                    f"{context}: image/png decoded data exceeds the safety limit"
+                )
         elif chunk_type == b"IDAT":
+            if idat_sequence_closed:
+                raise NotebookBuildError(
+                    f"{context}: image/png IDAT chunks must be consecutive"
+                )
+            if len(idat) + length > _MAX_PNG_IDAT_BYTES:
+                raise NotebookBuildError(
+                    f"{context}: image/png compressed data exceeds the safety limit"
+                )
             idat.extend(chunk_data)
+            saw_idat = True
         elif chunk_type == b"IEND":
             if length != 0 or position != len(raw):
                 raise NotebookBuildError(f"{context}: image/png has an invalid IEND")
             saw_iend = True
+
+        if saw_idat and chunk_type not in {b"IDAT", b"IEND"}:
+            idat_sequence_closed = True
 
         if chunk_type not in ignored_metadata | {b"IDAT", b"IEND"}:
             semantic_chunks.extend(chunk_type)
@@ -1172,18 +1340,37 @@ def _png_fingerprint(payload: Any, context: str) -> dict[str, Any]:
         if saw_iend:
             break
 
-    if width is None or height is None or not idat or not saw_iend:
+    if (
+        width is None
+        or height is None
+        or row_bytes is None
+        or filter_bytes_per_pixel is None
+        or expected_scanline_bytes is None
+        or not idat
+        or not saw_iend
+    ):
         raise NotebookBuildError(f"{context}: image/png is missing required chunks")
-    try:
-        decoded_raster = zlib.decompress(bytes(idat))
-    except zlib.error as exc:
-        raise NotebookBuildError(
-            f"{context}: image/png raster data cannot be decompressed"
-        ) from exc
-    digest = hashlib.sha256(
-        bytes(semantic_chunks) + b"IDAT" + decoded_raster
-    ).hexdigest()
-    return {"format": "png", "width": width, "height": height, "sha256": digest}
+
+    scanlines = _bounded_png_decompress(
+        bytes(idat), expected_scanline_bytes, context
+    )
+    digest = hashlib.sha256()
+    digest.update(bytes(semantic_chunks))
+    digest.update(b"IDAT")
+    for row in _iter_unfiltered_png_rows(
+        scanlines,
+        height=height,
+        row_bytes=row_bytes,
+        filter_bytes_per_pixel=filter_bytes_per_pixel,
+        context=context,
+    ):
+        digest.update(row)
+    return {
+        "format": "png",
+        "width": width,
+        "height": height,
+        "sha256": digest.hexdigest(),
+    }
 
 
 def _comparable_outputs(outputs: Sequence[Any], context: str) -> list[Any]:
@@ -1193,7 +1380,7 @@ def _comparable_outputs(outputs: Sequence[Any], context: str) -> list[Any]:
     content remain exact. PNG compression and textual software metadata may
     vary across supported operating systems.
     """
-    comparable = json.loads(json.dumps(outputs))
+    comparable = deepcopy(list(outputs))
     for output_index, output in enumerate(comparable, start=1):
         if not isinstance(output, dict):
             raise NotebookBuildError(
