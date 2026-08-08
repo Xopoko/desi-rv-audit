@@ -1,0 +1,105 @@
+{
+  "schema": "desi_rv_audit.explanation_sources.v1",
+  "as_of": "2026-08-08",
+  "sources": [
+    {
+      "id": "S-DESI-DR1-STELLAR-PAPER",
+      "title": "DESI Data Release 1: Stellar Catalogue",
+      "type": "primary_paper",
+      "url": "https://arxiv.org/abs/2505.14787",
+      "stable_id": "arXiv:2505.14787",
+      "checked_at": "2026-08-08",
+      "role": "Catalogue scope, single-epoch radial velocities, precision, and documented DR1 systematics"
+    },
+    {
+      "id": "S-DESI-DR1-STELLAR-DOC",
+      "title": "DESI DR1 Stellar Catalogue of Radial Velocities, Abundances, and Atmospheric Parameters",
+      "type": "official_documentation",
+      "url": "https://data.desi.lbl.gov/doc/releases/dr1/vac/mws/",
+      "stable_id": "DESI-DR1-MWS-VAC",
+      "checked_at": "2026-08-08",
+      "role": "Official catalogue contents, pipeline provenance, and repeat-observation counts"
+    },
+    {
+      "id": "S-DESI-MWS-OVERVIEW",
+      "title": "Overview of the DESI Milky Way Survey",
+      "type": "primary_paper",
+      "url": "https://arxiv.org/abs/2208.08514",
+      "stable_id": "arXiv:2208.08514",
+      "checked_at": "2026-08-08",
+      "role": "Milky Way Survey goals, stellar kinematics, and radial-velocity performance"
+    },
+    {
+      "id": "S-DESI-DR1-BAO",
+      "title": "DESI 2024 VI: Cosmological Constraints from the Measurements of Baryon Acoustic Oscillations",
+      "type": "primary_paper",
+      "url": "https://arxiv.org/abs/2404.03002",
+      "stable_id": "arXiv:2404.03002",
+      "checked_at": "2026-08-08",
+      "role": "The separate DESI cosmology route from extragalactic redshifts to dark-energy constraints"
+    },
+    {
+      "id": "S-DESI-GLOSSARY",
+      "title": "DESI Data Glossary",
+      "type": "official_documentation",
+      "url": "https://data.desi.lbl.gov/doc/glossary/",
+      "stable_id": "DESI-DATA-GLOSSARY",
+      "checked_at": "2026-08-08",
+      "role": "Official definitions of fiber, focal plane, PETAL, program, spectrum, and spectrograph"
+    },
+    {
+      "id": "S-DESI-FOCAL-PLANE",
+      "title": "DESI Focal Plane System",
+      "type": "official_documentation",
+      "url": "https://www.desi.lbl.gov/focal-plane-system/",
+      "stable_id": "DESI-FOCAL-PLANE",
+      "checked_at": "2026-08-08",
+      "role": "Five thousand positioners arranged into ten 500-fiber wedges"
+    },
+    {
+      "id": "S-RVSPECFIT",
+      "title": "RVSpecFit: Automated Spectroscopic Pipeline",
+      "type": "software_documentation",
+      "url": "https://rvspecfit.readthedocs.io/en/latest/",
+      "stable_id": "RVSPECFIT-DOCS",
+      "checked_at": "2026-08-08",
+      "role": "How DESI spectra are fitted with stellar templates to obtain radial velocities"
+    },
+    {
+      "id": "S-DARK-MATTER-KINEMATICS",
+      "title": "The Local Dark Matter Density",
+      "type": "scholarly_review",
+      "url": "https://arxiv.org/abs/1404.1938",
+      "stable_id": "doi:10.1088/0954-3899/41/6/063101",
+      "checked_at": "2026-08-08",
+      "role": "Why stellar positions and velocities can constrain Galactic mass models and dark matter"
+    },
+    {
+      "id": "S-BACKUP-CORRECTION",
+      "title": "DESI DR1 radial velocity correction for the backup program of the main survey",
+      "type": "data_release",
+      "url": "https://doi.org/10.5281/zenodo.15469272",
+      "stable_id": "doi:10.5281/zenodo.15469272",
+      "checked_at": "2026-08-08",
+      "role": "Published BACKUP velocity correction consumed by this repository"
+    },
+    {
+      "id": "S-DESI-ACKNOWLEDGMENTS",
+      "title": "DESI Data License and Acknowledgments",
+      "type": "official_documentation",
+      "url": "https://data.desi.lbl.gov/doc/acknowledgments/",
+      "stable_id": "DESI-DATA-LICENSE",
+      "checked_at": "2026-08-08",
+      "role": "CC BY 4.0 terms and required acknowledgment for DESI-derived artifacts"
+    },
+    {
+      "id": "S-GAIA-DR3",
+      "title": "Gaia Data Release 3 contents summary",
+      "type": "official_documentation",
+      "url": "https://www.cosmos.esa.int/web/gaia/dr3",
+      "stable_id": "GAIA-DR3",
+      "checked_at": "2026-08-08",
+      "role": "Gaia source identifiers used to group repeated observations of the same star"
+    }
+  ]
+}

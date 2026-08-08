@@ -21,7 +21,19 @@ dependencies = [
 [project.optional-dependencies]
 fits = ["astropy>=5.3"]
 parquet = ["pyarrow>=14"]
-dev = ["pytest>=7.4", "matplotlib>=3.7"]
+dev = [
+  "pytest>=7.4",
+  "matplotlib>=3.7",
+  "nbclient>=0.8",
+  "nbformat>=5.9",
+]
+explain = [
+  "matplotlib>=3.7",
+  "ipython>=8.12,<9",
+  "nbclient>=0.8",
+  "nbformat>=5.9",
+  "ipykernel>=6.25",
+]
 
 [project.scripts]
 desi-rv-audit = "desi_rv_audit.cli:main"

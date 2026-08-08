@@ -55,7 +55,7 @@ def test_package_version_comes_from_metadata():
 
 
 def test_manifest_records_output_hashes(tmp_path):
-    (tmp_path / "result.csv").write_text("x\n1\n", encoding="utf-8")
+    (tmp_path / "result.csv").write_bytes(b"x\n1\n")
     (tmp_path / "run_manifest.json").write_text("{}", encoding="utf-8")
 
     result = add_output_files({"git_commit": "abc"}, tmp_path)
