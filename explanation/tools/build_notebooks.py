@@ -7,9 +7,12 @@ as their working directory so every input path remains repository-relative.
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import hashlib
 import json
 import sys
+import zlib
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from textwrap import dedent
 from typing import Any, Callable, Sequence
@@ -1103,8 +1106,110 @@ def check_notebooks() -> list[str]:
     return errors
 
 
+def _png_fingerprint(payload: Any, context: str) -> dict[str, Any]:
+    """Fingerprint decoded PNG raster data while ignoring text metadata."""
+    if isinstance(payload, list) and all(isinstance(part, str) for part in payload):
+        payload = "".join(payload)
+    if not isinstance(payload, str):
+        raise NotebookBuildError(f"{context}: image/png payload must be base64 text")
+    try:
+        raw = base64.b64decode(payload.encode("ascii"), validate=True)
+    except (UnicodeEncodeError, ValueError, binascii.Error) as exc:
+        raise NotebookBuildError(
+            f"{context}: image/png payload is not valid base64"
+        ) from exc
+    signature = b"\x89PNG\r\n\x1a\n"
+    if not raw.startswith(signature):
+        raise NotebookBuildError(f"{context}: image/png payload has no PNG signature")
+
+    position = len(signature)
+    width: int | None = None
+    height: int | None = None
+    idat = bytearray()
+    semantic_chunks = bytearray()
+    saw_iend = False
+    chunk_index = 0
+    ignored_metadata = {b"tEXt", b"zTXt", b"iTXt", b"tIME", b"eXIf"}
+
+    while position < len(raw):
+        if position + 12 > len(raw):
+            raise NotebookBuildError(f"{context}: image/png contains a truncated chunk")
+        length = int.from_bytes(raw[position : position + 4], "big")
+        chunk_type = raw[position + 4 : position + 8]
+        data_start = position + 8
+        data_end = data_start + length
+        chunk_end = data_end + 4
+        if chunk_end > len(raw):
+            raise NotebookBuildError(f"{context}: image/png contains a truncated chunk")
+        chunk_data = raw[data_start:data_end]
+        stored_crc = int.from_bytes(raw[data_end:chunk_end], "big")
+        actual_crc = zlib.crc32(chunk_type + chunk_data) & 0xFFFFFFFF
+        if stored_crc != actual_crc:
+            raise NotebookBuildError(f"{context}: image/png chunk CRC is invalid")
+        position = chunk_end
+
+        if chunk_type == b"IHDR":
+            if chunk_index != 0 or length != 13 or width is not None:
+                raise NotebookBuildError(f"{context}: image/png has an invalid IHDR")
+            width = int.from_bytes(chunk_data[:4], "big")
+            height = int.from_bytes(chunk_data[4:8], "big")
+            if width < 1 or height < 1:
+                raise NotebookBuildError(
+                    f"{context}: image/png dimensions must be positive"
+                )
+        elif chunk_type == b"IDAT":
+            idat.extend(chunk_data)
+        elif chunk_type == b"IEND":
+            if length != 0 or position != len(raw):
+                raise NotebookBuildError(f"{context}: image/png has an invalid IEND")
+            saw_iend = True
+
+        if chunk_type not in ignored_metadata | {b"IDAT", b"IEND"}:
+            semantic_chunks.extend(chunk_type)
+            semantic_chunks.extend(length.to_bytes(4, "big"))
+            semantic_chunks.extend(chunk_data)
+        chunk_index += 1
+        if saw_iend:
+            break
+
+    if width is None or height is None or not idat or not saw_iend:
+        raise NotebookBuildError(f"{context}: image/png is missing required chunks")
+    try:
+        decoded_raster = zlib.decompress(bytes(idat))
+    except zlib.error as exc:
+        raise NotebookBuildError(
+            f"{context}: image/png raster data cannot be decompressed"
+        ) from exc
+    digest = hashlib.sha256(
+        bytes(semantic_chunks) + b"IDAT" + decoded_raster
+    ).hexdigest()
+    return {"format": "png", "width": width, "height": height, "sha256": digest}
+
+
+def _comparable_outputs(outputs: Sequence[Any], context: str) -> list[Any]:
+    """Normalize non-semantic PNG metadata before output comparison.
+
+    Text, tables, output metadata/order, image geometry, and decoded raster
+    content remain exact. PNG compression and textual software metadata may
+    vary across supported operating systems.
+    """
+    comparable = json.loads(json.dumps(outputs))
+    for output_index, output in enumerate(comparable, start=1):
+        if not isinstance(output, dict):
+            raise NotebookBuildError(
+                f"{context}: output {output_index} must be a mapping"
+            )
+        data = output.get("data")
+        if not isinstance(data, dict) or "image/png" not in data:
+            continue
+        data["image/png"] = _png_fingerprint(
+            data["image/png"], f"{context}: output {output_index}"
+        )
+    return comparable
+
+
 def execute_check_notebooks() -> list[str]:
-    """Re-execute generated cells in memory and compare their saved outputs."""
+    """Re-execute generated cells and compare stable saved-output semantics."""
     errors = check_notebooks()
     if errors:
         return errors
@@ -1129,9 +1234,22 @@ def execute_check_notebooks() -> list[str]:
                 errors.append(
                     f"{relative_path}: cell {index} execution count differs after re-execution"
                 )
-            if actual_cell.get("outputs", []) != expected_cell.get("outputs", []):
+            try:
+                actual_outputs = _comparable_outputs(
+                    actual_cell.get("outputs", []),
+                    f"{relative_path}: cell {index} committed outputs",
+                )
+                expected_outputs = _comparable_outputs(
+                    expected_cell.get("outputs", []),
+                    f"{relative_path}: cell {index} re-executed outputs",
+                )
+            except NotebookBuildError as exc:
+                errors.append(str(exc))
+                continue
+            if actual_outputs != expected_outputs:
                 errors.append(
-                    f"{relative_path}: cell {index} saved outputs differ after re-execution"
+                    f"{relative_path}: cell {index} stable saved-output semantics "
+                    "differ after re-execution"
                 )
     return errors
 
@@ -1164,7 +1282,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 for error in errors:
                     print(error, file=sys.stderr)
                 return 1
-            print("Notebook execution check passed: committed outputs reproduce exactly.")
+            print(
+                "Notebook execution check passed: stable text and decoded plot "
+                "content reproduce."
+            )
             return 0
         if args.check:
             errors = check_notebooks()
